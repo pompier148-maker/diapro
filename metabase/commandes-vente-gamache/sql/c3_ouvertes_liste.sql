@@ -23,4 +23,5 @@ LEFT JOIN raw_prextra.customers c ON c.custid = so.custid
 LEFT JOIN raw_prextra.salesrep s ON s.srid = so.srid
 LEFT JOIN dwh.dim_product p ON p.stock_id = so.stock AND p.is_current
 LEFT JOIN stg.status_map sm ON sm.cloud_status = p.status
+WHERE so.stock IS NOT NULL  -- les commandes sans # stock sont suivies dans les cartes 1 et 7
 ORDER BY so.date_commande, so.sonbr
