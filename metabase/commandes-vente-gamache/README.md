@@ -44,7 +44,7 @@ facturées, par vendeur) et la qualité de saisie.
 
 | Table | Contenu | Rafraîchissement |
 |---|---|---|
-| `raw_prextra.soheader` | entêtes de commandes (flags `isactive`, `validcommand`, `ishold`, `isvoid`) | toutes les 5 min en journée, rechargement complet à 2 h |
+| `raw_prextra.soheader` | entêtes de commandes (flags `isactive`, `validcommand`, `ishold`, `isvoid`) | toutes les 5 min en journée, rechargement complet à 2 h — **sauf les fermetures faites par l'écran « Fermeture/Ouverture des commandes », visibles seulement après 2 h** (voir Limites connues) |
 | `raw_prextra.customers`, `salesrep` | client, vendeur de la commande | idem |
 | `raw_prextra.invheader` | factures ; `invheader.sonbr` relie une facture à sa commande | idem |
 | `raw_prextra.recordlog` | journal d'audit Prextra (insert / modify / delete sur `soheader`, avec `userid` et heure, sans le champ modifié) | idem |
@@ -109,6 +109,18 @@ Le connecteur MCP ne crée pas d'abonnements. Deux minutes dans l'interface :
 
 ## Limites connues
 
+- **Fermeture par l'écran « Fermeture/Ouverture des commandes » : visible
+  seulement après le rechargement de 2 h.** Cet écran Prextra (`closeSOreleases.asp`)
+  bascule `isactive` de l'entête, des lignes et des releases sans écrire dans
+  `recordlog`, et l'extraction incrémentale des 5 minutes se base sur ce journal
+  (`soheader` n'a aucune colonne de date de modification). Constaté le
+  2026-09-02 : 13 commandes fermées par cet écran en journée sont restées
+  « ouvertes » dans le DWH jusqu'au rechargement complet du lendemain 2 h, sans
+  aucune entrée de journal. Conséquence : l'abonnement du matin (8 h) est juste,
+  mais une vérification en cours de journée peut montrer une commande déjà
+  fermée. Une fermeture faite en modifiant la commande (écran normal) laisse une
+  entrée `modify` et se voit en 5 minutes. Correctif possible côté pipeline :
+  comparer aussi `isactive` ou recharger `soheader` chaque heure.
 - **Historique Cloud depuis le 2026-07-30 seulement.** Pour une commande plus
   ancienne, on ne peut pas prouver qu'elle a déjà été « vendue » : elle sort en
   « jamais vue vendue ». Le problème disparaît avec le temps.
