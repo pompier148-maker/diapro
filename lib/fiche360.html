@@ -1,0 +1,910 @@
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F4F6F8; --surface:#FFFFFF; --surface2:#EDF1F5; --ink:#172029; --muted:#5F6B78; --line:#D9DFE6; --line2:#C5CED8;
+  --accent:#245C8E; --accent-ink:#FFFFFF; --accent-soft:#E3EDF6;
+  --good:#2F7D4E; --good-soft:#E2F1E7; --warn:#A8700F; --warn-soft:#F8EDD3; --crit:#B4322A; --crit-soft:#F9E3E0; --info:#4F5D6B; --info-soft:#E8ECF0;
+  --shadow:0 1px 2px rgba(23,32,41,.06),0 6px 16px -8px rgba(23,32,41,.12);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --cond:"IBM Plex Sans Condensed","Arial Narrow",var(--sans);
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#111820; --surface:#192330; --surface2:#1F2B39; --ink:#E6EBF0; --muted:#98A5B3; --line:#2A3745; --line2:#37465A;
+    --accent:#78B0E0; --accent-ink:#0E1A26; --accent-soft:#1E3247;
+    --good:#6CC08B; --good-soft:#1B3325; --warn:#E0B24A; --warn-soft:#3A2F14; --crit:#F08A80; --crit-soft:#3F1F1D; --info:#A8B5C2; --info-soft:#24303D;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px -10px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#111820; --surface:#192330; --surface2:#1F2B39; --ink:#E6EBF0; --muted:#98A5B3; --line:#2A3745; --line2:#37465A;
+  --accent:#78B0E0; --accent-ink:#0E1A26; --accent-soft:#1E3247;
+  --good:#6CC08B; --good-soft:#1B3325; --warn:#E0B24A; --warn-soft:#3A2F14; --crit:#F08A80; --crit-soft:#3F1F1D; --info:#A8B5C2; --info-soft:#24303D;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px -10px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+button{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--cond);margin:0;text-wrap:balance;letter-spacing:-.005em}
+h2{font-size:17px;font-weight:600}
+h3{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* ---- top bar ---- */
+.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.top-in{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font-family:var(--cond);font-size:18px;font-weight:700}
+.brand span{color:var(--muted);font-size:12px}
+form.search{display:flex;gap:8px;flex:1;min-width:260px;max-width:520px}
+form.search input{flex:1;font:500 16px var(--mono);letter-spacing:.02em;padding:9px 12px;border:1px solid var(--line2);border-radius:6px;background:var(--surface2);color:var(--ink);text-transform:uppercase}
+form.search input::placeholder{text-transform:none;font-family:var(--sans);font-weight:400;color:var(--muted)}
+form.search input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+form.search button{padding:9px 16px;border:0;border-radius:6px;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer}
+form.search button:disabled{opacity:.6;cursor:progress}
+.conn{margin-left:auto;display:flex;gap:10px;font-size:12px;color:var(--muted)}
+.conn span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--line2);margin-right:5px;vertical-align:1px}
+.conn span.ok::before{background:var(--good)} .conn span.bad::before{background:var(--crit)} .conn span.wait::before{background:var(--warn)}
+.conn span.user::before{display:none} .conn span.user{color:var(--ink)} .conn a.signout{color:var(--muted);text-decoration:none} .conn a.signout:hover{color:var(--accent)}
+
+main{max-width:1180px;margin:0 auto;padding:20px}
+
+/* ---- identity ---- */
+.ident{display:grid;grid-template-columns:auto auto 1fr auto;gap:18px;align-items:start;padding:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.hero{display:block;width:240px;height:160px;border-radius:8px;overflow:hidden;background:var(--surface2);border:1px solid var(--line);flex:none}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);text-decoration:none;font-size:12px}
+.hero.empty span{font-size:28px;opacity:.7}
+.hero .ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:100%;color:var(--muted);font-size:12px}
+.hero:hover{border-color:var(--accent)}
+.ident .stock{font:500 34px/1 var(--mono);letter-spacing:-.02em}
+.ident .stock small{display:block;font:500 12px var(--sans);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.ident .desc h1{font-size:22px;font-weight:600}
+.ident .desc .sub{color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap}
+.ident .links{display:flex;flex-direction:column;gap:6px;align-items:flex-end;font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font:600 12px var(--cond);letter-spacing:.03em;text-transform:uppercase;background:var(--info-soft);color:var(--info);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.crit{background:var(--crit-soft);color:var(--crit)} .pill.accent{background:var(--accent-soft);color:var(--accent)}
+
+/* ---- KPIs ---- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:14px}
+.kpi{background:var(--surface);padding:12px 14px}
+.kpi .l{font:600 11px var(--cond);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font:500 22px/1.15 var(--mono);margin-top:4px;letter-spacing:-.01em}
+.kpi .v.small{font-size:16px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:3px}
+.kpi.warn .v{color:var(--warn)} .kpi.crit .v{color:var(--crit)} .kpi.good .v{color:var(--good)}
+
+/* ---- alerts ---- */
+.alerts{margin-top:14px;display:grid;gap:8px}
+.alert{display:grid;grid-template-columns:4px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.alert>i{background:var(--info)} .alert.warn>i{background:var(--warn)} .alert.crit>i{background:var(--crit)} .alert.good>i{background:var(--good)}
+.alert>div{padding:10px 12px 10px 0}
+.alert b{font-family:var(--cond);font-weight:600}
+.alert p{margin:2px 0 0;color:var(--muted);font-size:13px}
+
+/* ---- tabs ---- */
+.tabs{margin-top:22px;display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font:600 14px var(--cond);color:var(--muted);cursor:pointer;white-space:nowrap;letter-spacing:.01em}
+.tabs button .c{font:500 11px var(--mono);background:var(--surface2);color:var(--muted);border-radius:999px;padding:1px 7px;margin-left:6px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button:focus-visible,form.search button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{display:none;padding-top:16px}
+.panel.on{display:block}
+.section{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.section h2{margin-bottom:10px;display:flex;align-items:baseline;gap:10px}
+.section h2 .src{font:500 11px var(--mono);color:var(--muted);letter-spacing:0;text-transform:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.grid2 .section{margin:0}
+
+/* ---- tables ---- */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font:600 11px var(--cond);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+td.d{font-family:var(--mono);white-space:nowrap;font-size:12px}
+td.ch{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-word;max-width:640px}
+td.ch b{color:var(--ink);font-weight:500}
+.dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:13px}
+.dl dt{color:var(--muted)} .dl dd{margin:0}
+
+/* ---- timeline ---- */
+.tl-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tl-filters label{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;cursor:pointer;background:var(--surface)}
+.tl-filters label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.tl-filters input{margin:0;accent-color:var(--accent)}
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl::before{content:"";position:absolute;left:118px;top:0;bottom:0;border-left:1px solid var(--line2)}
+.tl li{display:grid;grid-template-columns:104px 28px 1fr;gap:0 10px;padding:6px 0;align-items:start}
+.tl .when{font:500 12px var(--mono);color:var(--muted);text-align:right;padding-top:2px}
+.tl .dot{width:10px;height:10px;border-radius:50%;background:var(--info);margin:6px auto 0;position:relative;left:1px;box-shadow:0 0 0 3px var(--ground)}
+.tl li[data-k="statut"] .dot{background:var(--accent);width:12px;height:12px;left:0;margin-top:5px}
+.tl li[data-k="offre"] .dot{background:var(--good)} .tl li[data-k="atelier"] .dot{background:var(--warn)} .tl li[data-k="cout"] .dot{background:var(--crit)} .tl li[data-k="note"] .dot{background:var(--muted)} .tl li[data-k="pub"] .dot{background:var(--info)}
+.tl .what{padding-top:1px}
+.tl .what b{font-weight:600}
+.tl .what .by{color:var(--muted);font-size:12px;margin-left:6px}
+.tl .what .more{display:block;color:var(--muted);font-size:12px;margin-top:2px;white-space:pre-wrap}
+.tl .gap{grid-column:1/-1;text-align:center;font:500 11px var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--warn);padding:6px 0 6px 130px;text-align:left}
+.tl.wide::before{left:118px}
+
+/* ---- states ---- */
+.state{padding:40px 20px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line2);border-radius:8px}
+.state h2{color:var(--ink);margin-bottom:6px}
+.state code{font-family:var(--mono);background:var(--surface2);padding:1px 6px;border-radius:4px}
+.err{padding:12px 14px;border-radius:6px;background:var(--crit-soft);color:var(--crit);font-size:13px}
+.err.warn{background:var(--warn-soft);color:var(--warn)}
+.err b{display:block;font-family:var(--cond)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spin{animation:none}}
+.loading{padding:30px;text-align:center;color:var(--muted)}
+.topbtn{font:600 13px var(--cond);letter-spacing:.02em;padding:7px 12px;border:1px solid var(--line2);background:var(--surface);color:var(--accent);border-radius:6px;cursor:pointer;white-space:nowrap}
+.topbtn:hover{border-color:var(--accent);background:var(--accent-soft)}
+.topbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.foot{margin-top:24px;padding-top:10px;border-top:1px dashed var(--line);font-size:12px;color:var(--muted)} .foot p{margin:4px 0} .foot b{font-weight:600}
+.verdict{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--info);border-radius:8px;padding:12px 16px}
+.verdict.good{border-left-color:var(--good)} .verdict.warn{border-left-color:var(--warn)} .verdict.crit{border-left-color:var(--crit)}
+.verdict .vh{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.verdict p{margin:8px 0 0;max-width:80ch;line-height:1.55}
+.verdict p.act{font-weight:600;color:var(--ink)}
+.more-btn{margin-top:10px;background:none;border:1px solid var(--line2);border-radius:6px;padding:6px 12px;font:600 13px var(--cond);color:var(--accent);cursor:pointer;letter-spacing:.02em}
+.more-btn:hover{border-color:var(--accent);background:var(--accent-soft)} .more-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stack{display:flex;height:18px;border-radius:4px;overflow:hidden;background:var(--surface2);margin-top:10px}
+.stack i{display:block;height:100%;min-width:2px}
+.stack i.achat{background:var(--info)} .stack i.labor{background:var(--accent)} .stack i.material{background:var(--good)} .stack i.sc{background:var(--warn)} .stack i.autre{background:var(--line2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--line2)}
+.legend span.achat::before{background:var(--info)} .legend span.labor::before{background:var(--accent)} .legend span.material::before{background:var(--good)} .legend span.sc::before{background:var(--warn)}
+.legend b{color:var(--ink);font-family:var(--mono);font-weight:500}
+details.fold{margin-top:10px} details.fold summary{cursor:pointer;font:600 13px var(--cond);color:var(--accent);letter-spacing:.02em} details.fold summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+tr.total td{font-weight:600;border-top:2px solid var(--line2)}
+.ladder{display:grid;grid-template-columns:max-content 1fr max-content;gap:6px 12px;align-items:center;margin-top:10px;font-size:13px}
+.ladder .lb{color:var(--muted);font:600 11px var(--cond);letter-spacing:.06em;text-transform:uppercase}
+.ladder .tr{height:14px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.ladder .tr i{display:block;height:100%;background:var(--info);border-radius:3px}
+.ladder .tr i.accent{background:var(--accent)}
+.ladder .tr i.good{background:var(--good)}
+.ladder .tr i.warn{background:var(--warn)}
+.ladder .v{font:500 13px var(--mono);text-align:right;white-space:nowrap}
+.delta{font:500 12px var(--mono);border-radius:4px;padding:1px 6px;background:var(--surface2);color:var(--muted)}
+.delta.good{background:var(--good-soft);color:var(--good)}
+.delta.warn{background:var(--warn-soft);color:var(--warn)}
+.delta.crit{background:var(--crit-soft);color:var(--crit)}
+.bench{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.bench b{color:var(--ink);font-family:var(--mono);font-weight:500}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0 0}
+.mbars{display:flex;gap:4px;align-items:flex-end;height:90px;margin-top:10px}
+.mbars div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:0}
+.mbars i{display:block;width:100%;background:var(--accent);border-radius:3px 3px 0 0;opacity:.85}
+.mbars small{font:500 10px var(--mono);color:var(--muted);white-space:nowrap}
+.mbars b{font:500 11px var(--mono);color:var(--ink)}
+.stocklink{white-space:nowrap;font:500 13px var(--mono);color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.stocklink:hover{text-decoration-style:solid}
+.stocklink:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+th.r,td.r{text-align:right}
+.ai{margin-top:14px}
+.ai .bar{display:flex;gap:10px;align-items:center}
+.ai button{padding:8px 14px;border:1px solid var(--accent);border-radius:6px;background:var(--surface);color:var(--accent);font-weight:600;cursor:pointer}
+.ai button:disabled{opacity:.6;cursor:progress}
+.ai .out{margin-top:10px;white-space:pre-wrap;line-height:1.55;max-width:72ch}
+.stale{font-size:11px;color:var(--muted)}
+.rawfilter{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.rawfilter input,.rawfilter select{font:inherit;padding:6px 10px;border:1px solid var(--line2);border-radius:6px;background:var(--surface2);color:var(--ink)}
+@media (max-width:760px){
+  .ident{grid-template-columns:1fr}
+  .hero{width:100%;height:200px}
+  .ident .links{align-items:flex-start}
+  .tl::before{left:78px}
+  .tl li{grid-template-columns:64px 28px 1fr}
+  .tl .when{font-size:11px}
+  .tl .gap{padding-left:90px}
+}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><b>Fiche 360°</b><span>Gamache Cloud · Prextra · Groupe Gamache</span></div>
+    <form class="search" id="f" autocomplete="off">
+      <input id="q" placeholder="No de stock, ex. C-34382" aria-label="Numéro de stock" spellcheck="false">
+      <button id="go" type="submit">Ouvrir</button>
+    </form>
+    <button type="button" class="topbtn" id="nego-btn" title="Offres reçues vs prix affiché vs prix facturé, 12 derniers mois (Gamache DWH)">Négociation · 12 mois</button>
+    <div class="conn" id="conn"><span id="c-retool" title="Gamache Cloud (MongoDB en direct)">Cloud</span><span id="c-metabase" title="Gamache DWH (réplique Prextra)">DWH</span><span id="c-user" class="user"></span><a href="/api/auth/signout" class="signout">Déconnexion</a></div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="state" id="empty">
+    <h2>Tout ce qui est relié à un numéro de stock, sur un seul écran</h2>
+    <p>Tape un numéro (<code>C-…</code>, <code>R-…</code>, <code>GX-…</code>, <code>AC-…</code>, <code>H-…</code>, <code>PI-…</code>) pour réunir les logs et les offres de Gamache Cloud (Mongo, en direct) avec les bons de travail, l'inventaire et les achats Prextra (Gamache DWH). Le bouton <b>Négociation · 12 mois</b> compare, pour toutes les unités, les offres proposées aux clients, le prix affiché et le prix finalement facturé.</p>
+    <p class="small" id="empty-note">Lecture seule : rien de ce que tu fais ici ne modifie Gamache Cloud ni Prextra. Chaque consultation est journalisée.</p>
+  </div>
+</main>
+
+<script>
+(() => {
+"use strict";
+/* ============ config ============ */
+const STOCK_RE = /^[A-Z]{1,3}-\d{1,7}(?:-\d{1,8})?$/;
+const NOISE = new Set(["acheteur_c","c_enginemodel_c","age_status_c","note_2e_banniere_c","meta_last_force_push_c"]);
+const STATUS_FR = {}; // rempli depuis Mongo (collection status)
+
+/* ============ helpers ============ */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtDate = v => { if (!v) return "—"; if (/^\d{4}-\d{2}-\d{2}$/.test(String(v))) return String(v); const d = new Date(v); if (isNaN(d)) return esc(v); return d.toLocaleDateString("fr-CA", {timeZone:"America/Toronto", year:"numeric", month:"2-digit", day:"2-digit"}); };
+const fmtDT = v => { if (!v) return "—"; const d = new Date(v); if (isNaN(d)) return esc(v); return d.toLocaleString("fr-CA", {timeZone:"America/Toronto", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"}); };
+const money = n => (n == null || isNaN(n)) ? "—" : new Intl.NumberFormat("fr-CA", {style:"currency", currency:"CAD", maximumFractionDigits:0}).format(n);
+const parseMoney = s => { if (s == null) return null; if (typeof s === "number") return s; const m = String(s).replace(/[^\d.,-]/g,"").replace(/,(?=\d{3})/g,"").replace(",","."); const n = parseFloat(m); return isNaN(n) ? null : n; };
+const days = (a, b=new Date()) => Math.round((new Date(b) - new Date(a)) / 864e5);
+const plural = (n, s, p) => n === 1 ? s : (p || s + "s");
+const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+/* ============ API serveur ============ */
+// Toutes les données passent par les routes /api/* de cette app (login requis, lecture seule, journalisées).
+let mcp = true, sample = false;
+const connEl = { Retool: $("#c-retool"), Metabase: $("#c-metabase") };
+function setConn(name, cls, title){ const el = connEl[name]; if (!el) return; el.className = cls; if (title) el.title = title; }
+
+async function apiGet(url){
+  const r = await fetch(url, { cache: "no-store", credentials: "same-origin" });
+  if (r.status === 401) { location.href = "/login"; throw { code: "not_granted", message: "session expirée" }; }
+  let j = null; try { j = await r.json(); } catch {}
+  if (!r.ok) throw { code: r.status >= 500 ? "server_unavailable" : "tool_error", message: (j && j.error) || ("HTTP " + r.status), retryable: r.status >= 502 };
+  return { payload: j, cache: j && j.storedAt ? { storedAt: j.storedAt } : null };
+}
+
+async function boot(){
+  const me = document.body.dataset.user || "";
+  if (me) { const u = $("#c-user"); if (u) u.textContent = me; }
+  try {
+    const h = (await apiGet("/api/health")).payload || {};
+    setConn("Retool", h.cloud ? "ok" : "bad", h.cloud ? "Gamache Cloud joignable" : "Gamache Cloud injoignable");
+    setConn("Metabase", h.dwh ? "ok" : "bad", h.dwh ? "DWH joignable" : "DWH injoignable");
+    sample = !!h.ai;
+  } catch {}
+  const h = decodeURIComponent(location.hash.slice(1)).trim().toUpperCase();
+  if (h === "NEGOCIATION") { loadNego(); return; }
+  const last = store.get("f360:last");
+  const start = STOCK_RE.test(h) ? h : (last && STOCK_RE.test(last) ? last : null);
+  if (start) { $("#q").value = start; load(start); }
+}
+
+function mcpErrorHtml(err, server){
+  const code = err?.code || "upstream_error";
+  const map = {
+    not_granted: `<b>Session expirée</b>Reconnecte-toi.`,
+    server_unavailable: `<b>${server} ne répond pas</b>${esc(err?.message || "Serveur indisponible ou trop lent. Réessaie dans quelques instants.")}`,
+    tool_error: `<b>${server} a renvoyé une erreur</b>${esc(err?.message || "")}`,
+  };
+  return `<div class="err ${code==="server_unavailable"?"warn":""}">${map[code] || `<b>Erreur ${esc(code)}</b>${esc(err?.message||"")}`}</div>`;
+}
+
+async function callWithRetry(url){
+  try { return await apiGet(url); }
+  catch (e) {
+    if (e && e.retryable) { await new Promise(r => setTimeout(r, 1200 + Math.random()*800)); return await apiGet(url); }
+    throw e;
+  }
+}
+const asObj = p => (typeof p === "string") ? (()=>{ try { return JSON.parse(p); } catch { return null; } })() : p;
+
+/* ============ Photo ============ */
+// Le serveur va chercher la photo (site web d'abord, Gamache Cloud sinon) et la sert lui-même.
+let photoErr = null;
+async function fetchPhoto(stock){
+  const r = await fetch(`/api/photo?stock=${encodeURIComponent(stock)}`, { credentials: "same-origin" });
+  if (r.status === 404) throw { code: "tool_error", message: "aucune photo trouvée" };
+  if (!r.ok) throw { code: "tool_error", message: "HTTP " + r.status };
+  const blob = await r.blob();
+  return { ok: true, url: URL.createObjectURL(blob), source: r.headers.get("x-photo-source") || "", page: r.headers.get("x-photo-page") || "" };
+}
+function applyPhoto(stock, ph){
+  if (!ph || !current || current.stock !== stock) return;
+  const img = $("#hero-img"); if (!img) return;
+  const a = img.parentElement;
+  img.src = ph.url;
+  img.hidden = false; a.classList.remove("empty"); const ph2 = a.querySelector(".ph"); if (ph2) ph2.hidden = true;
+  if (ph.page) a.href = ph.page;
+  a.title = ph.source === "web" ? "Photo du site web · ouvrir l'annonce" : "Photo Gamache Cloud · ouvrir la fiche";
+}
+
+/* ============ DWH (réponses des routes serveur) ============ */
+function parseDwh(payload){
+  const p = asObj(payload);
+  const rows = p?.data?.rows || [];
+  const out = {};
+  for (const [src, j] of rows) { (out[src] ||= []).push(typeof j === "string" ? JSON.parse(j) : j); }
+  return out;
+}
+
+/* ============ Négociation (DWH) ============ */
+// Une « offre » = une proposition créée dans Gamache Cloud vers un client Sugar (logs.event = offer).
+//   prix offert  = payload.prix_offert_c (prix proposé au client pour l'unité principale stock_num_c)
+//   prix liste   = payload.c_prixvente_c (prix de vente affiché de l'unité au moment de l'offre)
+//   vendue       = première facture Prextra (hors interco GL 561) datée après la première offre
+let nego = null, negoErr = null, negoStale = null, negoPromise = null;
+function fetchNego(){
+  if (!mcp) return Promise.resolve(null);
+  if (nego) return Promise.resolve(nego);
+  if (negoPromise) return negoPromise;
+  negoPromise = callWithRetry("/api/nego")
+    .then(r => { const g = parseDwh(r.payload); nego = { kpi: g.kpi?.[0] || null, cat: g.cat || [], vend: g.vend || [], unsold: g.unsold || [], month: g.month || [] }; negoErr = null; negoStale = r.cache?.storedAt || null; return nego; })
+    .catch(e => { negoErr = e; return null; })
+    .finally(() => { negoPromise = null; });
+  return negoPromise;
+}
+const pct = (x, d=1) => (x == null || isNaN(x)) ? "—" : (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(d).replace(".", ",") + " %";
+const pctAbs = (x, d=0) => (x == null || isNaN(x)) ? "—" : x.toFixed(d).replace(".", ",") + " %";
+const ratioDelta = r => (r == null || isNaN(r)) ? null : (r - 1) * 100;
+const deltaPill = (x, goodWhenPositive=true) => { if (x == null || isNaN(x)) return `<span class="delta">—</span>`; const good = goodWhenPositive ? x >= 0 : x <= 0; const cls = Math.abs(x) < 0.5 ? "" : good ? "good" : Math.abs(x) > 10 ? "crit" : "warn"; return `<span class="delta ${cls}">${pct(x)}</span>`; };
+
+/* ============ state & load ============ */
+let current = null;
+function pushRecent(stock){ store.set("f360:last", stock); }
+$("#f").addEventListener("submit", e => { e.preventDefault(); const v = $("#q").value.trim().toUpperCase().replace(/\s+/g,""); if (!STOCK_RE.test(v)) { $("#main").innerHTML = `<div class="state"><h2>Numéro invalide</h2><p>Format attendu : préfixe, tiret, chiffres — par ex. <code>C-34382</code>, <code>GX-23509</code>, <code>GX-33226-158347</code>.</p></div>`; return; } $("#q").value = v; load(v); });
+
+async function load(stock){
+  $("#go").disabled = true;
+  history.replaceState(null, "", "#" + stock);
+  $("#main").innerHTML = `<div class="loading"><span class="spin"></span>Chargement de <span class="mono">${esc(stock)}</span> — Gamache Cloud, DWH et photo en parallèle…</div>`;
+  photoErr = null;
+  const photoP = fetchPhoto(stock).catch(e => { photoErr = e; return null; });
+  const [r, m] = await Promise.allSettled([
+    callWithRetry(`/api/cloud?stock=${encodeURIComponent(stock)}`),
+    callWithRetry(`/api/dwh?stock=${encodeURIComponent(stock)}`),
+    fetchNego()   // repères de négociation (12 mois, toutes unités) — mis en cache 10 min, partagé avec la vue globale
+  ]);
+  $("#go").disabled = false;
+  let cloud = null, cloudErr = null, dwh = null, dwhErr = null, cloudStale = null, dwhStale = null;
+  if (r.status === "fulfilled") {
+    const p = asObj(r.value.payload);
+    if (p && p.error) cloudErr = { code: "tool_error", message: p.error };
+    else cloud = p?.data ?? p;
+    cloudStale = r.value.cache?.storedAt || null;
+  } else cloudErr = r.reason;
+  if (m.status === "fulfilled") { try { dwh = parseDwh(m.value.payload); } catch (e) { dwhErr = { code: "tool_error", message: "Réponse Metabase illisible : " + e.message }; } dwhStale = m.value.cache?.storedAt || null; }
+  else dwhErr = m.reason;
+  if (cloud?.statuses) for (const s of cloud.statuses) if (s.category !== "assurance" || !STATUS_FR[s.name]) STATUS_FR[s.name] = s.label;
+  current = { stock, cloud, cloudErr, dwh, dwhErr, cloudStale, dwhStale };
+  if (cloud?.found || (dwh && (dwh.dimp?.length || dwh.item?.length))) pushRecent(stock);
+  render();
+  photoP.then(ph => { if (ph) applyPhoto(stock, ph); else { const a = $("#hero"); if (a) { a.title = "Photo : " + (photoErr?.message || photoErr?.code || "indisponible"); const p2 = a.querySelector(".ph small"); if (p2) p2.textContent = "Aucune photo"; } } });
+}
+
+/* ============ derive ============ */
+const statusLabel = s => s ? (STATUS_FR[s] || s) : "—";
+function derive(){
+  const { cloud, dwh } = current;
+  const d = { alerts: [], timeline: [], statusRows: [], offers: [], costNow: null, costSteps: [], sale: null };
+  const P = cloud?.found ? cloud.product : null;
+  const logs = cloud?.logs || [];
+  // statuts & timeline Cloud
+  let prevStatus = null;
+  for (const l of logs) {
+    if (l.event === "offer" || l.event === "quotation") {
+      d.offers.push(l);
+      d.timeline.push({ k:"offre", t:l.date, title:`Offre client${l.offer.stocks.length > 1 ? " (multi-unités : " + l.offer.stocks.join(", ") + ")" : ""}`, by:l.offer.vendeur || l.user, more:[l.offer.client && "Client : " + l.offer.client, l.offer.prix && "Prix offert pour cette unité : " + l.offer.prix, l.offer.liste && "Liste à l'offre : " + l.offer.liste, l.offer.isMain === false && l.offer.principal && "Unité principale de l'offre : " + l.offer.principal, l.offer.statut && "Statut : " + l.offer.statut].filter(Boolean).join(" · ") });
+      continue;
+    }
+    const ch = l.changes && typeof l.changes === "object" ? l.changes : {};
+    if (l.event === "create-product") d.timeline.push({ k:"statut", t:l.date, title:`Création du dossier — ${statusLabel(ch.status)}`, by:l.user, more:[ch.fournisseur_c && "Fournisseur : " + ch.fournisseur_c, ch.c_prixdachat_c && "Prix d'achat : " + ch.c_prixdachat_c, ch.province_pickup_c && "Pickup : " + ch.province_pickup_c].filter(Boolean).join(" · ") });
+    if (ch.status && l.event !== "create-product" && ch.status !== prevStatus) { d.statusRows.push({ date:l.date, status:ch.status, by:l.user }); d.timeline.push({ k:"statut", t:l.date, title:`Statut → ${statusLabel(ch.status)}`, by:l.user }); }
+    if (ch.status) prevStatus = ch.status;
+    if (ch.c_location_c) d.timeline.push({ k:"cour", t:l.date, title:`Déplacé : ${ch.c_location_c}`, by:l.user });
+    if (ch.c_prixvente_c) d.timeline.push({ k:"prix", t:l.date, title:`Prix de vente : ${ch.c_prixvente_c}`, by:l.user });
+    if (ch.note_publication_c) d.timeline.push({ k:"prix", t:l.date, title:`Note de publication : ${ch.note_publication_c}`, by:l.user });
+    if (ch.commentaire_pub_c) d.timeline.push({ k:"pub", t:l.date, title:`Bannière jaune : ${ch.commentaire_pub_c}`, by:l.user });
+    if (ch.priorite_c) d.timeline.push({ k:"atelier", t:l.date, title:`Priorité ${ch.priorite_c}`, by:l.user });
+    if (ch.preparation_c) d.timeline.push({ k:"atelier", t:l.date, title:`Préparation ${ch.preparation_c}`, by:l.user });
+    const pubOn = Object.keys(ch).filter(k => k.startsWith("is_published_") && ch[k] === true).map(k => k.replace("is_published_","").replace(/_c$/,""));
+    const pubOff = Object.keys(ch).filter(k => k.startsWith("is_published_") && ch[k] === false).map(k => k.replace("is_published_","").replace(/_c$/,""));
+    if (pubOn.length) d.timeline.push({ k:"pub", t:l.date, title:`Publié : ${pubOn.join(", ")}`, by:l.user });
+    if (pubOff.length) d.timeline.push({ k:"pub", t:l.date, title:`Retiré : ${pubOff.join(", ")}`, by:l.user });
+    if (ch.meta_last_force_push_c) d.timeline.push({ k:"sync", t:l.date, title:"Push forcé SugarCRM", by:l.user });
+    if (l.event === "unsold") d.timeline.push({ k:"statut", t:l.date, title:"Vente annulée — remis à vendre", by:l.user });
+    if (l.event === "create-child-products") d.timeline.push({ k:"atelier", t:l.date, title:"Pièces enfants créées", by:l.user });
+    if (l.event === "docudex-deleted-files") d.timeline.push({ k:"doc", t:l.date, title:"Fichiers Docudex supprimés", by:l.user });
+    if (ch.prix_vente_c || ch.nom_compagnie_c || ch.c_vendeur_c || ch.f_and_i_c) { d.sale = d.sale || {}; if (ch.prix_vente_c) { d.sale.prix = ch.prix_vente_c; d.sale.date = l.date; d.sale.by = l.user; } if (ch.nom_compagnie_c) { d.sale.client = ch.nom_compagnie_c; d.sale.date = d.sale.date || l.date; } if (ch.c_vendeur_c) d.sale.vendeur = Array.isArray(ch.c_vendeur_c) ? ch.c_vendeur_c.join(", ") : ch.c_vendeur_c; if (ch.f_and_i_c) d.sale.fi = ch.f_and_i_c; }
+    if (ch.prix_vente_c || ch.nom_compagnie_c) d.timeline.push({ k:"statut", t:l.date, title:`Vente : ${ch.prix_vente_c || ""} ${ch.nom_compagnie_c ? "— " + ch.nom_compagnie_c : ""}`.trim(), by:l.user, more:[ch.c_vendeur_c && "Vendeur : " + (Array.isArray(ch.c_vendeur_c) ? ch.c_vendeur_c.join(", ") : ch.c_vendeur_c), ch.f_and_i_c && "F&I : " + ch.f_and_i_c].filter(Boolean).join(" · ") });
+  }
+  if (P && (P.specs.prixVendu || P.specs.client || P.specs.vendeur)) { d.sale = d.sale || {}; d.sale.prix = d.sale.prix || P.specs.prixVendu || null; d.sale.client = d.sale.client || P.specs.client || null; d.sale.vendeur = d.sale.vendeur || (Array.isArray(P.specs.vendeur) ? P.specs.vendeur.join(", ") : P.specs.vendeur) || null; d.sale.fi = d.sale.fi || P.specs.fi || null; d.sale.contact = P.specs.contact || null; }
+  for (const n of (cloud?.notes || [])) d.timeline.push({ k:"note", t:n.date, title:`Note ${n.type || ""}${n.importance === "important" ? " (importante)" : ""}`, by:n.user, more:n.note });
+  // Prextra
+  for (const w of (dwh?.wo || [])) {
+    d.timeline.push({ k:"atelier", t:w.order_date, title:`BT ${w.wonbr} ouvert${w.wodescr ? " — " + w.wodescr.split(/\r?\n/)[0] : ""}`, by:"Prextra", more: w.wodescr && w.wodescr.includes("\n") ? w.wodescr : "" });
+    if (w.closed_date) d.timeline.push({ k:"atelier", t:w.closed_date, title:`BT ${w.wonbr} fermé — ${w.statut || ""}`, by:"Prextra" });
+  }
+  let prevCost = null;
+  const movs = (dwh?.mov || []).slice().sort((a,b) => String(a.tr_timestamp||a.tr_date).localeCompare(String(b.tr_timestamp||b.tr_date)));
+  for (const mv of movs) {
+    const c = mv.avg_cost != null ? Number(mv.avg_cost) : null;
+    if (c != null && (prevCost === null || Math.abs(c - prevCost) >= 0.5)) {
+      d.costSteps.push({ date: mv.tr_date, type: mv.tr_type, from: prevCost, to: c, ref: mv.wonbr || mv.pono || mv.sonbr || mv.invnbr || "" });
+      if (prevCost !== null) d.timeline.push({ k:"cout", t:mv.tr_date, title:`Coût cumulé ${money(prevCost)} → ${money(c)} (${mv.tr_type})`, by:"Prextra" });
+      prevCost = c;
+    }
+  }
+  d.costNow = prevCost ?? (dwh?.dimp?.[0]?.total_cost != null ? Number(dwh.dimp[0].total_cost) : (P?.cached?.totalCost?.parent ?? null));
+  for (const so of (dwh?.so || [])) d.timeline.push({ k:"statut", t:so.order_date, title:`Commande Prextra ${so.sonbr} — ${so.customer_name || ""} ${money(Number(so.amount))} (${so.so_status || ""})`, by:"Prextra" });
+  for (const iv of (dwh?.inv || [])) d.timeline.push({ k:"statut", t:iv.inv_date, title:`Facture Prextra ${iv.invnbr} — ${iv.customer_name || ""} ${money(Number(iv.amount))}${iv.is_posted ? " · comptabilisée" : ""}`, by:"Prextra" });
+  for (const ap of (dwh?.ap || [])) d.timeline.push({ k:"cout", t:ap.inv_date, title:`Facture fournisseur ${ap.vendor_name || ""} ${money(Number(ap.amount))}`, by:"Prextra", more: ap.vendor_invnbr ? "No " + ap.vendor_invnbr : "" });
+  d.timeline.sort((a,b) => String(a.t).localeCompare(String(b.t)));
+
+  // ---- alerts ----
+  const asking = parseMoney(P?.specs?.prixVente) ?? (dwh?.dimp?.[0]?.asking_price != null ? Number(dwh.dimp[0].asking_price) : null);
+  d.asking = asking && asking > 10 ? asking : null;
+  const st = P?.status || dwh?.dimp?.[0]?.status;
+  const forSale = /a_vendre|disponible|reserve/.test(st || "");
+  if (d.asking && d.costNow != null && d.costNow > d.asking) d.alerts.push({ lvl:"crit", t:`Coût cumulé au-dessus du prix demandé`, p:`Prextra cumule ${money(d.costNow)} alors que le prix affiché est ${money(d.asking)} — marge négative de ${money(d.costNow - d.asking)} avant même la négociation.` });
+  else if (d.asking && d.costNow != null && (d.asking - d.costNow) / d.asking < 0.1) d.alerts.push({ lvl:"warn", t:`Marge mince`, p:`${money(d.asking - d.costNow)} entre le coût cumulé (${money(d.costNow)}) et le prix demandé (${money(d.asking)}).` });
+  const todo = (cloud?.evals || []).filter(e => /faire/i.test(e.status || ""));
+  if (forSale && todo.length) d.alerts.push({ lvl:"warn", t:`${todo.length} ${plural(todo.length,"estimé Cloud encore « À FAIRE »","estimés Cloud encore « À FAIRE »")} sur un véhicule à vendre`, p: todo.map(e => [e.parts && "pièces " + money(Number(e.parts)), e.material && "matériel " + money(Number(e.material)), e.hours && e.hours + " h", ...(e.remarks||[])].filter(Boolean).join(", ")).join(" · ") });
+  const openWo = (dwh?.wo || []).filter(w => w.is_active && !w.closed_date);
+  if (openWo.length) d.alerts.push({ lvl:"warn", t:`${openWo.length} ${plural(openWo.length,"bon de travail Prextra ouvert","bons de travail Prextra ouverts")}`, p: openWo.map(w => `BT ${w.wonbr} (${w.statut || "?"}, depuis le ${fmtDate(w.order_date)})`).join(" · ") });
+  // ---- négociation : offres vs prix affiché vs prix facturé ----
+  const N = { n: d.offers.length, priced: [], clients: new Set(), first: d.offers[0]?.date || null, last: d.offers[d.offers.length-1]?.date || null };
+  for (const o of d.offers) { const v = parseMoney(o.offer.prix); const li = parseMoney(o.offer.liste); const typo = v && li && li > 0 && v > li * 2.5; if (v && v > 0 && !typo) N.priced.push({ date: o.date, prix: v, liste: li && li > 0 ? li : null, client: o.offer.client, vendeur: o.offer.vendeur || o.user }); const c = (o.offer.client || "").trim().toLowerCase(); if (c && ![".","0","-"].includes(c)) N.clients.add(c); }
+  N.multi = d.offers.filter(o => o.offer.isMain === false).length;
+  N.lastListe = N.priced.length ? (N.priced.slice().reverse().find(x => x.liste)?.liste ?? null) : null;
+  N.best = N.priced.length ? Math.max(...N.priced.map(x => x.prix)) : null;
+  N.bestRow = N.best ? N.priced.filter(x => x.prix === N.best).sort((a,b) => String(b.date).localeCompare(String(a.date)))[0] : null;
+  N.lastPrix = N.priced.length ? N.priced[N.priced.length-1].prix : null;
+  N.asking = d.asking || N.lastListe;
+  const invRows = (dwh?.inv || []).filter(i => i.inv_date && Number(i.amount));
+  const after = N.first ? invRows.filter(i => new Date(i.inv_date) >= new Date(String(N.first).slice(0,10))) : [];
+  const invSet = after.length ? after : [];
+  N.invoiced = invSet.length ? invSet.reduce((a,i) => a + Number(i.amount), 0) : null;
+  N.invDate = invSet.length ? invSet.map(i => i.inv_date).sort()[0] : null;
+  N.daysToSale = N.first && N.invDate ? days(String(N.first).slice(0,10), N.invDate) : null;
+  N.offerVsAsking = N.best && N.asking ? ratioDelta(N.best / N.asking) : null;
+  N.invVsOffer = N.invoiced && N.best ? ratioDelta(N.invoiced / N.best) : null;
+  N.invVsAsking = N.invoiced && N.asking ? ratioDelta(N.invoiced / N.asking) : null;
+  const cat = P?.specs?.cat || dwh?.dimp?.[0]?.category || null;
+  N.cat = cat;
+  N.benchCat = cat && nego ? nego.cat.find(c => c.category === cat) || null : null;
+  const vendCount = {}; for (const o of d.offers) { const v = (o.offer.vendeur || o.user || "").trim(); if (v) vendCount[v] = (vendCount[v]||0)+1; }
+  N.mainVendeur = Object.entries(vendCount).sort((a,b) => b[1]-a[1])[0]?.[0] || null;
+  N.benchVend = N.mainVendeur && nego ? nego.vend.find(v => v.vendeur === N.mainVendeur) || null : null;
+  d.nego = N;
+  if (N.best && N.asking && N.offerVsAsking < -8 && forSale) d.alerts.push({ lvl:"warn", t:`Les offres se font sous le prix affiché`, p:`Meilleure offre ${money(N.best)} contre ${money(N.asking)} affiché (${pct(N.offerVsAsking)}). Sur 12 mois, le marché ${cat ? "des " + cat : ""} propose en médiane ${N.benchCat?.med_offer_over_liste ? pct(ratioDelta(Number(N.benchCat.med_offer_over_liste))) : "—"} par rapport au prix de liste.` });
+  if (P && logs.length) { const lastLog = logs[logs.length-1].date; if (P.dateModified && days(lastLog, P.dateModified) > 1) d.alerts.push({ lvl:"info", t:"Modifié hors journal", p:`Le produit a été modifié le ${fmtDate(P.dateModified)} mais le dernier log date du ${fmtDate(lastLog)} — probablement une synchronisation (SugarCRM / Prextra) qui n'écrit pas de log.` }); }
+  if (P && logs.length) { const lastAct = logs[logs.length-1].date; const idle = days(lastAct); if (forSale && idle > 90) d.alerts.push({ lvl:"warn", t:`Aucune activité depuis ${idle} jours`, p:`Dernier mouvement dans Cloud le ${fmtDate(lastAct)}.` }); }
+  const x = dwh?.xref?.[0];
+  if (x && (x.in_prextra === false || x.in_cloud === false)) d.alerts.push({ lvl:"crit", t:"Référentiel incomplet", p:`product_xref : Cloud ${x.in_cloud ? "oui" : "non"}, Prextra ${x.in_prextra ? "oui" : "non"}, Sugar ${x.in_sugar ? "oui" : "non"}.` });
+  const pst = dwh?.item?.[0]?.status;
+  if (P && pst && pst !== P.status) d.alerts.push({ lvl:"warn", t:"Statut Cloud ≠ statut Prextra", p:`Cloud : ${statusLabel(P.status)} (${P.status}) · Prextra : ${pst}. Vérifier la synchronisation.` });
+  if (P && dwh && dwh.dimp?.length === 0 && dwh.item?.length === 0) d.alerts.push({ lvl:"warn", t:"Absent du DWH", p:"Le stock existe dans Mongo mais ni dwh.dim_product ni stg.prextra_items ne le connaissent." });
+  const evc = dwh?.evcount?.[0]?.n;
+  if (P && evc != null && logs.length) { const mongoNonOffer = logs.filter(l => !l.offer).length; if (Math.abs(mongoNonOffer + d.offers.length - evc) > 0) d.alerts.push({ lvl:"info", foot:true, t:"Réplication DWH incomplète", p:`Mongo : ${logs.length} logs (dont ${d.offers.length} offres) · stg.cloud_product_events : ${evc}. ${d.offers.length && evc === mongoNonOffer ? "Les offres (taguées par UUID) ne sont pas répliquées." : "Écart à investiguer."}` }); }
+  if (cloud && cloud.found && cloud.via === "transferred_to") d.alerts.push({ lvl:"info", t:"Numéro transféré", p:`${current.stock} a été transféré : le dossier affiché est ${P.stockId}.` });
+  if (!P && dwh?.dimp?.length) d.alerts.push({ lvl:"warn", t:"Introuvable dans Mongo, présent dans le DWH", p:"Le produit a peut-être été supprimé de Gamache Cloud; les données ci-dessous viennent de la réplique." });
+  return d;
+}
+
+/* ============ conclusion ============ */
+// Verdict court et déterministe, bâti sur les mêmes données que les compteurs. Pas d'IA ici : le bouton « Analyser avec Claude » reste pour la version narrative.
+function conclusion(d, ctx){
+  const N = d.nego || {}, b = N.benchCat, { status, ageDays, forSale, sold } = ctx;
+  const j = (...a) => a.filter(Boolean).join(" ");
+  const nClients = N.clients ? N.clients.size : 0;
+  const sinceFirst = N.first ? days(String(N.first).slice(0,10)) : null;
+  const sinceLast = N.last ? days(String(N.last).slice(0,10)) : null;
+  const medDays = b && b.med_days != null ? Math.round(Number(b.med_days)) : null;
+  const conv = b ? pctAbs(Number(b.conv_pct)) : null;
+  const margin = d.asking && d.costNow != null ? d.asking - d.costNow : null;
+  const marginPct = margin != null ? 100 * margin / d.asking : null;
+  if (sold || N.invoiced) {
+    const S = d.sale || {};
+    const prixVendu = parseMoney(S.prix);
+    const inv = (ctx.invRows || []).filter(i => Number(i.amount)).sort((a,b) => String(a.inv_date).localeCompare(String(b.inv_date)));
+    const invTotal = inv.length ? inv.reduce((a,i) => a + Number(i.amount), 0) : null;
+    const invClient = inv.find(i => i.customer_name)?.customer_name || null;
+    const who = j(S.vendeur && `Vendu par ${esc(S.vendeur)}`, !S.vendeur && "Vendu", S.client && `à ${esc(S.client)}${S.contact && String(S.contact).trim().toLowerCase() !== String(S.client).trim().toLowerCase() ? " (" + esc(S.contact) + ")" : ""}`, S.fi && `avec ${esc(S.fi)} au F&I`, S.date && `le ${fmtDate(S.date)}`);
+    const price = prixVendu ? `Prix de vente Cloud ${money(prixVendu)}` : "Prix de vente non inscrit dans Cloud";
+    const fact = inv.length ? `Facture Prextra ${inv.map(i => i.invnbr).filter(Boolean).join(", ")} du ${fmtDate(inv[0].inv_date)} : ${money(invTotal)}${invClient && (!S.client || invClient.trim().toLowerCase() !== String(S.client).trim().toLowerCase()) ? " au nom de " + esc(invClient) : ""}${prixVendu && invTotal && Math.abs(invTotal - prixVendu) > 1 ? " (écart " + (invTotal > prixVendu ? "+" : "") + money(invTotal - prixVendu) + " avec Cloud)" : ""}.` : "Aucune facture Prextra trouvée pour cette unité.";
+    const marginSold = d.costNow != null && (invTotal || prixVendu) ? (invTotal || prixVendu) - d.costNow : null;
+    const t = j(who + ".", price + ".", fact,
+      marginSold != null && `Marge brute ${money(marginSold)} sur un coût cumulé de ${money(d.costNow)}.`,
+      N.invVsOffer != null && `La facture s'est conclue ${pct(N.invVsOffer)} par rapport à la meilleure offre${N.invVsAsking != null ? " et " + pct(N.invVsAsking) + " par rapport au prix affiché" : ""}.`,
+      N.daysToSale != null && `${N.daysToSale} jours entre la première offre et la facture${medDays ? ", contre " + medDays + " en médiane pour la catégorie" : ""}.`);
+    return { verdict: "Vendu", cls: "good", text: t, action: (!S.vendeur || !S.fi) ? `Dossier de vente incomplet dans Cloud : ${[!S.vendeur && "vendeur", !S.client && "client", !S.fi && "F&I", !prixVendu && "prix de vente"].filter(Boolean).join(", ")} manquant.` : null };
+  }
+  if (!forSale) {
+    return { verdict: statusLabel(status), cls: "info", text: j(`L'unité n'est pas en vente pour le moment (statut ${statusLabel(status)}).`, ageDays != null && `En inventaire depuis ${ageDays} jours.`, nClients && `${nClients} client${nClients>1?"s":""} ${nClients>1?"ont":"a"} déjà reçu une proposition.`), action: ctx.openWo ? `${ctx.openWo} bon${ctx.openWo>1?"s":""} de travail encore ouvert${ctx.openWo>1?"s":""} : la remise en vente dépend de l'atelier.` : null };
+  }
+  if (!N.n) {
+    return { verdict: ageDays > 180 ? "Aucune demande" : "Trop tôt pour juger", cls: ageDays > 180 ? "warn" : "info", text: j(`En vente depuis ${ageDays ?? "?"} jours sans aucune proposition envoyée à un client.`, ctx.published === 0 && "L'unité n'est publiée sur aucune plateforme."), action: ageDays > 180 ? "Vérifier la publication, les photos et le prix affiché : rien ne sort sur cette unité." : null };
+  }
+  const slow = sinceFirst != null && medDays && sinceFirst > medDays * 1.5;
+  const stale = sinceLast != null && sinceLast > 60;
+  const demand = nClients >= 10 ? "forte" : nClients >= 4 ? "réelle" : "faible";
+  let verdict, cls, action;
+  if (demand !== "faible" && slow) { verdict = "Intéresse mais ne se conclut pas"; cls = "warn"; action = marginPct != null && marginPct >= 15 ? `Le prix ou la condition bloquent. Il y a ${money(margin)} de marge brute (${pctAbs(marginPct)}) pour bouger le prix ou financer une remise en état.` : marginPct != null ? `Le prix ou la condition bloquent, mais la marge brute est mince (${money(margin)}) : revoir le coût ou accepter une vente serrée.` : "Le prix ou la condition bloquent : comparer avec les unités semblables vendues récemment."; }
+  else if (demand === "faible" && ageDays > 180) { verdict = "Peu de demande"; cls = "warn"; action = "Peu de clients ont reçu une proposition : revoir la visibilité (publication, photos, description) avant de toucher au prix."; }
+  else if (stale) { verdict = "Demande qui s'essouffle"; cls = "warn"; action = `Aucune proposition depuis ${sinceLast} jours. Relancer les ${nClients} client${nClients>1?"s":""} déjà intéressé${nClients>1?"s":""} ou rafraîchir l'annonce.`; }
+  else { verdict = "Se vend normalement"; cls = "good"; action = null; }
+  const text = j(
+    `En vente depuis ${ageDays ?? "?"} jours, demande ${demand} : ${N.priced.length} proposition${N.priced.length>1?"s":""} chiffrée${N.priced.length>1?"s":""} à ${nClients} client${nClients>1?"s":""}${N.first ? " depuis le " + fmtDate(N.first) : ""}${N.last ? ", la dernière le " + fmtDate(N.last) : ""}.`,
+    N.best && `Meilleure proposition ${money(N.best)}${N.bestRow?.vendeur ? " par " + esc(N.bestRow.vendeur) : ""}${N.asking && N.offerVsAsking != null ? ", " + pct(N.offerVsAsking) + " par rapport au prix affiché de " + money(N.asking) : ""}.`,
+    b && `Dans la catégorie ${esc(N.cat)}, ${conv} des unités avec propositions finissent facturées, en ${medDays} jours médians${sinceFirst != null ? " ; celle-ci en est à " + sinceFirst : ""}.`,
+    margin != null && (marginPct < 0 ? `Le coût cumulé dépasse le prix affiché de ${money(-margin)}.` : `Marge brute ${money(margin)} (${pctAbs(marginPct)}) avant négociation.`)
+  );
+  return { verdict, cls, text, action };
+}
+
+/* ============ render ============ */
+function render(){
+  const { stock, cloud, cloudErr, dwh, dwhErr } = current;
+  const P = cloud?.found ? cloud.product : null;
+  const dimp = dwh?.dimp?.[0] || null, item = dwh?.item?.[0] || null;
+  if (!P && !dimp && !item) {
+    if (cloudErr && dwhErr) { $("#main").innerHTML = `<div class="state"><h2>Aucune source disponible</h2></div>${mcpErrorHtml(cloudErr,"Gamache Cloud")}<div style="height:8px"></div>${mcpErrorHtml(dwhErr,"DWH")}`; return; }
+    $("#main").innerHTML = `<div class="state"><h2><span class="mono">${esc(stock)}</span> introuvable</h2><p>Ni Gamache Cloud (Mongo) ni le DWH ne connaissent ce numéro. Vérifie le préfixe et les chiffres.</p>${cloudErr ? mcpErrorHtml(cloudErr,"Gamache Cloud") : ""}${dwhErr ? mcpErrorHtml(dwhErr,"DWH") : ""}</div>`; return;
+  }
+  const d = derive();
+  const S = P?.specs || {};
+  const status = P?.status || dimp?.status || item?.status;
+  const stClass = /vendu|comptabilise/.test(status||"") ? "good" : /a_vendre|disponible/.test(status||"") ? "accent" : /hold|annule|attente/.test(status||"") ? "warn" : "";
+  const title = [S.annee || dimp?.model_year, S.marque || dimp?.make, S.modele || dimp?.model].filter(Boolean).join(" ") || item?.descr || "Véhicule";
+  const created = P?.dateEntered || dimp?.date_entered;
+  const ageDays = created ? days(created) : null;
+  const buy = parseMoney(S.prixAchat) ?? (dwh?.ap?.[0]?.amount != null ? Number(dwh.ap[0].amount) : null);
+  const lastLoc = [...(cloud?.logs||[])].reverse().find(l => l.changes && l.changes.c_location_c)?.changes.c_location_c || S.location;
+  const evalsTodo = (cloud?.evals||[]).filter(e => /faire/i.test(e.status||"")).length;
+  const kpi = (l, v, s, cls="") => `<div class="kpi ${cls}"><div class="l">${l}</div><div class="v ${String(v).length > 12 ? "small" : ""}">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+
+  const sid = P?.stockId || stock;
+  const cloudPage = `https://gestion.gamache.cloud/product/${encodeURIComponent(sid)}`;
+  const heroHtml = `<a class="hero empty" id="hero" href="${cloudPage}" target="_blank" rel="noopener" title="Photo en cours de chargement"><img id="hero-img" hidden alt="Photo de ${esc(sid)}"><span class="ph"><span>📷</span><small>Photo…</small></span></a>`;
+  let html = `
+  <section class="ident">
+    ${heroHtml}
+    <div class="stock"><small>Numéro de stock</small>${esc(sid)}</div>
+    <div class="desc">
+      <h1>${esc(title)}</h1>
+      <div class="sub">
+        <span class="pill ${stClass}">${esc(statusLabel(status))}</span>
+        ${S.cat ? `<span>${esc(S.cat)}${S.sub ? " · " + esc(S.sub) : ""}</span>` : (dimp?.category ? `<span>${esc(dimp.category)}${dimp.sub_category ? " · " + esc(dimp.sub_category) : ""}</span>` : "")}
+        ${S.descFr ? `<span>${esc(S.descFr)}</span>` : ""}
+        ${S.vin || dimp?.vin ? `<span class="mono small">NIV ${esc(S.vin || dimp.vin)}</span>` : ""}
+        ${S.gamache ? `<span class="muted">${esc(S.gamache)}</span>` : ""}
+      </div>
+      <div class="sub small muted" style="margin-top:6px">
+        ${S.moteur ? `<span>Moteur ${esc(S.moteur)} ${esc(Array.isArray(S.moteurModele) ? S.moteurModele.join("/") : (S.moteurModele||""))}</span>` : ""}
+        ${S.transmission ? `<span>Trans. ${esc(S.transmission)}</span>` : ""}
+        ${S.essieux ? `<span>${esc(S.essieux)}</span>` : ""}
+        ${S.km ? `<span>${esc(S.km)}</span>` : ""}${S.hrs ? `<span>${esc(S.hrs)}</span>` : ""}
+      </div>
+    </div>
+    <div class="links">
+      <a href="https://gestion.gamache.cloud/product/${encodeURIComponent(sid)}" target="_blank" rel="noopener">Ouvrir dans Gamache Cloud ↗</a>
+      <span class="small muted">Photos : ${[1,2,3,4,5,6].map(n => `<a href="https://gestion.gamache.cloud/product/photo/md/${n}/${encodeURIComponent(sid)}.jpg" target="_blank" rel="noopener">${n}</a>`).join(" · ")}</span>
+      ${S.youtube ? `<a href="https://www.youtube.com/watch?v=${encodeURIComponent(S.youtube)}" target="_blank" rel="noopener">Vidéo YouTube ↗</a>` : ""}
+      <span class="stale">Cloud : ${cloud ? (current.cloudStale ? "cache " + fmtDT(current.cloudStale) : "en direct") : "indisponible"} · DWH : ${dwh ? (current.dwhStale ? "cache " + fmtDT(current.dwhStale) : "réplique") : "indisponible"}</span>
+    </div>
+  </section>`;
+
+  html += `<div class="kpis">
+    ${kpi("Prix demandé", d.asking ? money(d.asking) : "—", S.notePub ? esc(S.notePub) : (S.prixVente ? esc(S.prixVente) : ""))}
+    ${kpi("Coût cumulé Prextra", d.costNow != null ? money(d.costNow) : "—", (() => { const jc = dwh?.jobcost || []; const at = jc.filter(r => /^(labor|material|st200|service|subcontr)$/.test(r.ct)).reduce((a,r) => a + (Number(r.montant) || 0), 0); const ac = jc.filter(r => /^(cachat|achat)$/.test(r.ct)).reduce((a,r) => a + (Number(r.montant) || 0), 0); if (ac || at) return "achat " + money(ac) + (at ? " + atelier " + money(at) : ""); return buy != null ? "achat " + money(buy) + (d.costNow != null && d.costNow > buy ? " + " + money(d.costNow - buy) + " de travaux" : "") : ""; })(), d.asking && d.costNow > d.asking ? "crit" : "")}
+    ${kpi("En inventaire", ageDays != null ? ageDays + " j" : "—", created ? "depuis le " + fmtDate(created) : "", ageDays > 365 ? "warn" : "")}
+    ${kpi("Offres clients", String(d.offers.length), d.offers.length ? "dernière le " + fmtDate(d.offers[d.offers.length-1].date) : (cloud ? "aucune" : "Cloud indisponible"))}
+    ${kpi("Bons de travail", dwh ? String((dwh.wo||[]).length) : "—", dwh ? ((dwh.wo||[]).filter(w => w.is_active && !w.closed_date).length + " ouvert(s)") : "DWH indisponible")}
+    ${kpi("Estimés Cloud", cloud ? String((cloud.evals||[]).length) : "—", cloud ? evalsTodo + " à faire" : "", evalsTodo ? "warn" : "")}
+    ${kpi("Emplacement", lastLoc ? esc(lastLoc) : "—", S.priorite ? "priorité " + esc(S.priorite) : "")}
+  </div>`;
+
+  {
+    const forSale = /a_vendre|disponible|reserve/.test(status || "");
+    const sold = /vendu|comptabilis/.test(status || "");
+    const c = conclusion(d, { status, ageDays, forSale, sold, openWo: (dwh?.wo||[]).filter(w => w.is_active && !w.closed_date).length, invRows: dwh?.inv || [], published: P?.specs?.published ? P.specs.published.length : null });
+    html += `<div class="verdict ${c.cls}"><div class="vh"><span class="pill ${c.cls}">${esc(c.verdict)}</span><span class="small muted">${c.verdict === "Vendu" ? "Résumé de la vente — Cloud (vendeur, client, F&I, prix) et facture Prextra" : "Conclusion automatique, bâtie sur les compteurs ci-dessus"}</span></div><p>${c.text}</p>${c.action ? `<p class="act">${c.action}</p>` : ""}</div>`;
+  }
+  if (cloudErr || dwhErr) html += `<div class="alerts">${cloudErr ? mcpErrorHtml(cloudErr,"Gamache Cloud") : ""}${dwhErr ? mcpErrorHtml(dwhErr,"DWH") : ""}</div>`;
+  const mainAlerts = d.alerts.filter(a => !a.foot), footAlerts = d.alerts.filter(a => a.foot);
+  if (mainAlerts.length) html += `<div class="alerts">${mainAlerts.map(a => `<div class="alert ${a.lvl}"><i></i><div><b>${esc(a.t)}</b><p>${esc(a.p)}</p></div></div>`).join("")}</div>`;
+
+
+  const nLogs = (cloud?.logs||[]).length, nWo = (dwh?.wo||[]).length, nEv = (cloud?.evals||[]).length;
+  html += `<div class="tabs" role="tablist">
+    <button role="tab" data-t="offres" aria-selected="true">Offres<span class="c">${d.offers.length}</span></button>
+    <button role="tab" data-t="atelier">Atelier & coûts<span class="c">${nWo + nEv}</span></button>
+    <button role="tab" data-t="docs">Documents & notes<span class="c">${(cloud?.files?.total||0) + (cloud?.notes||[]).length}</span></button>
+    <button role="tab" data-t="logs">Logs bruts<span class="c">${nLogs}</span></button>
+    <button role="tab" data-t="chrono">Chronologie<span class="c">${d.timeline.length}</span></button>
+  </div>`;
+
+  html += `<div class="panel on" data-p="offres">${renderOffres(d)}</div>`;
+  html += `<div class="panel" data-p="atelier">${renderAtelierCouts(cloud, dwh, d, buy)}</div>`;
+  html += `<div class="panel" data-p="docs">${renderDocs(cloud, P)}</div>`;
+  html += `<div class="panel" data-p="logs">${renderLogs(cloud)}</div>`;
+  html += `<div class="panel" data-p="chrono">${renderChrono(d)}</div>`;
+  if (sample) html += `<div class="ai section" style="margin-top:24px"><div class="bar"><button id="ai-btn" type="button">Analyser avec Claude</button><span class="small muted">Résumé narratif généré côté serveur à partir des données affichées.</span></div><div class="out" id="ai-out"></div></div>`;
+  if (footAlerts.length) html += `<div class="foot">${footAlerts.map(a => `<p><b>${esc(a.t)}</b> — ${esc(a.p)}</p>`).join("")}</div>`;
+  $("#main").innerHTML = html;
+  wire(d);
+}
+
+const KINDS = { statut:"Statuts & ventes", cour:"Cour", prix:"Prix", pub:"Publication", offre:"Offres", atelier:"Atelier", cout:"Coûts", note:"Notes", sync:"Sync", doc:"Docudex" };
+function renderChrono(d){
+  if (!d.timeline.length) return `<div class="state">Aucun événement.</div>`;
+  const present = [...new Set(d.timeline.map(e => e.k))];
+  const defaultOff = new Set(["cour","pub"]);
+  let items = "", prev = null;
+  for (const e of d.timeline) {
+    if (prev && days(prev, e.t) > 180) items += `<li class="gapli" data-k="gap"><span class="gap">— ${Math.round(days(prev, e.t)/30)} mois sans événement —</span></li>`;
+    items += `<li data-k="${e.k}"><span class="when">${fmtDate(e.t)}</span><span class="dot"></span><span class="what"><b>${esc(e.title)}</b>${e.by ? `<span class="by">${esc(e.by)}</span>` : ""}${e.more ? `<span class="more">${esc(e.more)}</span>` : ""}</span></li>`;
+    prev = e.t;
+  }
+  return `<div class="section"><h2>Chronologie fusionnée <span class="src">Cloud + Prextra</span></h2>
+    <div class="tl-filters" id="tlf">${present.map(k => `<label><input type="checkbox" value="${k}" ${defaultOff.has(k) ? "" : "checked"}>${KINDS[k] || k}</label>`).join("")}</div>
+    <ol class="tl" id="tl">${items}</ol></div>`;
+}
+function renderNegoStock(d){
+  const N = d.nego; if (!N) return "";
+  const { cloud, dwh } = current;
+  const cost = d.costNow;
+  const rows = [
+    cost != null && { l:"Coût cumulé", v:cost, cls:"" },
+    N.asking && { l:"Prix affiché", v:N.asking, cls:"accent" },
+    N.best && { l:"Meilleure offre", v:N.best, cls:"warn" },
+    N.invoiced && { l:"Prix facturé", v:N.invoiced, cls:"good" },
+  ].filter(Boolean);
+  const max = Math.max(...rows.map(r => r.v), 1);
+  const ladder = rows.length >= 2 ? `<div class="ladder">${rows.map(r => `<span class="lb">${r.l}</span><span class="tr"><i class="${r.cls}" style="width:${Math.max(2, Math.round(100*r.v/max))}%"></i></span><span class="v">${money(r.v)}</span>`).join("")}</div>` : "";
+  const kpi = (l, v, s, cls="") => `<div class="kpi ${cls}"><div class="l">${l}</div><div class="v ${String(v).length > 12 ? "small" : ""}">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+  const b = N.benchCat, bv = N.benchVend;
+  const benchLine = (lbl, x) => x ? `<span>${lbl} <b>${x.units}</b> unités avec offres · facturées <b>${pctAbs(Number(x.conv_pct))}</b> · délai médian <b>${x.med_days != null ? Math.round(Number(x.med_days)) + " j" : "—"}</b> · facturé/offre <b>${x.med_inv_over_offer ? pct(ratioDelta(Number(x.med_inv_over_offer))) : "—"}</b> · offre/liste <b>${x.med_offer_over_liste ? pct(ratioDelta(Number(x.med_offer_over_liste))) : "—"}</b></span>` : "";
+  return `<div class="section"><h2>Négociation <span class="src">offres Cloud × prix affiché × facture Prextra</span></h2>
+    <div class="kpis" style="margin-top:0">
+      ${kpi("Prix affiché", N.asking ? money(N.asking) : "—", d.asking ? "spec c_prixvente_c" : (N.lastListe ? "liste à la dernière offre" : ""))}
+      ${kpi("Meilleure offre", N.best ? money(N.best) : "—", N.bestRow ? `${esc(N.bestRow.vendeur || "?")} · ${fmtDate(N.bestRow.date)}${N.bestRow.client ? " · " + esc(N.bestRow.client) : ""}` : (N.n ? "offres sans montant" : "aucune offre"))}
+      ${kpi("Offres chiffrées", N.priced.length ? String(N.priced.length) : "0", N.priced.length ? `${N.clients.size} client${N.clients.size>1?"s":""} distinct${N.clients.size>1?"s":""}${N.multi ? " · " + N.multi + " en offre multi-unités" : ""}` : "")}
+      ${kpi("Offre vs affiché", N.offerVsAsking != null ? deltaPill(N.offerVsAsking, true) : "—", N.offerVsAsking != null ? (N.offerVsAsking >= 0 ? "proposée au-dessus du prix de liste" : "proposée sous le prix de liste") : "")}
+      ${kpi("Prix facturé", N.invoiced ? money(N.invoiced) : "—", N.invDate ? "facture du " + fmtDate(N.invDate) : (dwh ? "pas de facture après la 1re offre" : "DWH indisponible"))}
+      ${kpi("Facturé vs offre", N.invVsOffer != null ? deltaPill(N.invVsOffer, true) : "—", N.invVsAsking != null ? "vs affiché " + pct(N.invVsAsking) : "")}
+      ${kpi("1re offre → facture", N.daysToSale != null ? N.daysToSale + " j" : "—", N.first ? "1re offre le " + fmtDate(N.first) : "", b && N.daysToSale != null && b.med_days != null && N.daysToSale > Number(b.med_days) * 1.5 ? "warn" : "")}
+    </div>
+    ${ladder}
+    ${(b || bv) ? `<div class="bench">${benchLine("Repère " + esc(N.cat) + " (12 mois) :", b)}${benchLine("Repère " + esc(N.mainVendeur || "") + " (12 mois) :", bv)}</div>` : (negoErr ? `<p class="note">Repères 12 mois indisponibles : ${esc(negoErr?.message || negoErr?.code || "erreur Metabase")}.</p>` : "")}
+    <p class="note">Une offre est une proposition créée dans Gamache Cloud vers un client Sugar. « Meilleure offre » = le plus haut prix proposé pour cette unité, y compris quand elle figure dans une offre multi-unités (le prix lu est celui de l'unité, pas celui de l'unité principale); « liste à l'offre » = prix de vente de l'unité au moment de l'offre; « facturé » = somme des factures Prextra postérieures à la première offre. Repères calculés sur toutes les unités ayant reçu une offre dans les 12 derniers mois (bouton « Négociation · 12 mois »).</p>
+  </div>`;
+}
+function renderOffres(d){
+  if (!d.offers.length) return `<div class="state">Aucune offre client enregistrée dans Gamache Cloud pour ce numéro.</div>`;
+  const negoHtml = renderNegoStock(d);
+  const byV = {}; for (const o of d.offers) { const v = o.offer.vendeur || o.user || "?"; byV[v] = (byV[v]||0) + 1; }
+  const top = Object.entries(byV).sort((a,b) => b[1]-a[1]);
+  const byYear = {}; for (const o of d.offers) { const y = String(o.date).slice(0,4); byYear[y] = (byYear[y]||0)+1; }
+  return negoHtml + `<div class="grid2">
+    <div class="section"><h2>Par vendeur</h2><div class="tw"><table><thead><tr><th>Vendeur</th><th class="r">Offres</th></tr></thead><tbody>${top.map(([v,n]) => `<tr><td>${esc(v)}</td><td class="r num">${n}</td></tr>`).join("")}</tbody></table></div></div>
+    <div class="section"><h2>Par année</h2><div class="tw"><table><thead><tr><th>Année</th><th class="r">Offres</th></tr></thead><tbody>${Object.entries(byYear).map(([y,n]) => `<tr><td class="mono">${y}</td><td class="r num">${n}</td></tr>`).join("")}</tbody></table></div></div>
+  </div>
+  <div class="section"><h2>Toutes les offres <span class="src">${d.offers.length} · les 10 plus récentes, le reste replié</span></h2><div class="tw"><table><thead><tr><th>Date</th><th>Vendeur</th><th>Client</th><th class="r">Prix offert (cette unité)</th><th class="r">Liste à l'offre</th><th class="r">vs liste</th><th>Statut</th><th>Unités dans l'offre</th></tr></thead><tbody>
+  ${d.offers.slice().reverse().map((o, i) => { const pv = parseMoney(o.offer.prix); const li = parseMoney(o.offer.liste) || d.nego?.asking || null; const dl = pv && li ? ratioDelta(pv / li) : null; return `<tr class="${i >= 10 ? "more-offer" : ""}" ${i >= 10 ? "hidden" : ""}><td class="d">${fmtDT(o.date)}</td><td>${esc(o.offer.vendeur || o.user)}</td><td>${esc(o.offer.client || "—")}</td><td class="r num">${pv ? money(pv) : esc(o.offer.prix || "—")}</td><td class="r num">${o.offer.liste ? money(parseMoney(o.offer.liste)) : "—"}</td><td class="r">${dl != null ? deltaPill(dl, true) : "—"}</td><td>${esc(o.offer.statut || "—")}</td><td class="mono small">${o.offer.isMain === false && o.offer.principal ? `<span class="pill" title="Unité principale de l'offre">${esc(o.offer.principal)}</span> ` : ""}${esc(o.offer.stocks.filter(x => x !== (o.offer.principal || "")).join(", ") || "—")}</td></tr>`; }).join("")}
+  </tbody></table></div>${d.offers.length > 10 ? `<button type="button" class="more-btn" id="more-offers" aria-expanded="false">▾ Voir les ${d.offers.length - 10} offres plus anciennes</button>` : ""}</div>`;
+}
+function renderAtelier(cloud, dwh){
+  let h = `<div class="grid2">`;
+  const ev = cloud?.evals || [];
+  const sum = (arr, f) => arr.reduce((a,e) => a + (Number(f(e)) || 0), 0);
+  h += `<div class="section"><h2>Estimés Gamache Cloud <span class="src">evaluations</span></h2>`;
+  if (!cloud) h += `<p class="muted">Cloud indisponible.</p>`;
+  else if (!ev.length) h += `<p class="muted">Aucun estimé.</p>`;
+  else h += `<dl class="dl"><dt>Total heures</dt><dd class="num">${sum(ev, e=>e.hours)} h</dd><dt>Pièces</dt><dd>${money(sum(ev, e=>e.parts))}</dd><dt>Matériel</dt><dd>${money(sum(ev, e=>e.material))}</dd><dt>Terminés / à faire</dt><dd>${ev.filter(e=>/termin/i.test(e.status||"")).length} / ${ev.filter(e=>/faire/i.test(e.status||"")).length}</dd></dl>
+    <div class="tw" style="margin-top:10px"><table><thead><tr><th>Statut</th><th class="r">Heures</th><th class="r">Pièces</th><th class="r">Matériel</th><th>Remarques</th></tr></thead><tbody>${ev.map(e => `<tr><td><span class="pill ${/termin/i.test(e.status||"") ? "good" : "warn"}">${esc(e.status||"?")}</span></td><td class="r num">${esc(e.hours ?? "")}</td><td class="r num">${e.parts ? money(Number(e.parts)) : ""}</td><td class="r num">${e.material ? money(Number(e.material)) : ""}</td><td>${esc((e.remarks||[]).join(" · "))}</td></tr>`).join("")}</tbody></table></div>`;
+  h += `</div>`;
+  const pe = dwh?.peval || [];
+  h += `<div class="section"><h2>Évaluations Prextra <span class="src">stg.prextra_product_evaluations</span></h2>`;
+  if (!dwh) h += `<p class="muted">DWH indisponible.</p>`;
+  else if (!pe.length) h += `<p class="muted">Aucune évaluation Prextra.</p>`;
+  else h += `<div class="tw"><table><thead><tr><th>No</th><th>Qualité</th><th>Priorité</th><th>Statut</th><th class="r">Budget</th><th>Créée</th><th>Mise à jour</th></tr></thead><tbody>${pe.map(p => `<tr><td class="mono">${esc(p.qonbr)}</td><td>${esc(p.quality||"—")}</td><td>${esc(p.priority||"—")}</td><td>${esc(p.status||"—")}</td><td class="r num">${p.budget ? money(Number(p.budget)) : "—"}</td><td class="d">${String(p.creation_date||"").startsWith("1900") ? "—" : fmtDate(p.creation_date)}</td><td class="d">${fmtDate(p.last_updated)}</td></tr>`).join("")}</tbody></table></div>`;
+  h += `</div></div>`;
+  const wo = (dwh?.wo || []).slice().sort((a,b) => String(a.order_date).localeCompare(String(b.order_date)));
+  h += `<div class="section"><h2>Bons de travail Prextra <span class="src">stg.prextra_work_orders</span></h2>`;
+  if (!dwh) h += `<p class="muted">DWH indisponible.</p>`;
+  else if (!wo.length) h += `<p class="muted">Aucun bon de travail.</p>`;
+  else h += `<div class="tw"><table><thead><tr><th>BT</th><th>Type</th><th>Statut</th><th>Ouvert</th><th>Fermé</th><th class="r">Durée</th><th>Description</th></tr></thead><tbody>${wo.map(w => `<tr><td class="mono">${esc(w.wonbr)}</td><td>${esc(w.wo_type||"")}</td><td><span class="pill ${w.closed_date ? "good" : "warn"}">${esc(w.statut||w.status_code||"?")}</span></td><td class="d">${fmtDate(w.order_date)}</td><td class="d">${fmtDate(w.closed_date)}</td><td class="r num">${w.closed_date ? days(w.order_date, w.closed_date) + " j" : (w.order_date ? days(w.order_date) + " j…" : "")}</td><td style="white-space:pre-wrap;max-width:520px">${esc(w.wodescr||"")}${w.hold_reason ? `<div class="small muted">Hold : ${esc(w.hold_reason)}</div>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
+  h += `</div>`;
+  return h;
+}
+function renderAtelierCouts(cloud, dwh, d, buy){
+  // Un seul onglet : coûts d'abord (le résumé), puis l'atelier (estimés, évaluations, bons de travail), puis la fiche Prextra (item, achat, vente, mouvements)
+  let h = "";
+  if (dwh) h += renderCostSummary(dwh, d, buy);
+  h += renderAtelier(cloud, dwh);
+  h += renderPrextra(dwh);
+  return h;
+}
+function renderPrextra(dwh){
+  if (!dwh) return `<div class="state">DWH indisponible.</div>`;
+  const item = dwh.item?.[0], onh = dwh.onhand?.[0], x = dwh.xref?.[0];
+  let h = `<div class="grid2">`;
+  h += `<div class="section"><h2>Item Prextra <span class="src">stg.prextra_items</span></h2>${item ? `<dl class="dl"><dt>Code</dt><dd class="mono">${esc(item.item_code)}</dd><dt>Description</dt><dd>${esc(item.descr||"—")}</dd><dt>Statut</dt><dd>${esc(item.status||"—")} ${item.is_active === false ? '<span class="pill warn">inactif</span>' : ""}</dd><dt>Type</dt><dd>${esc([item.item_type, item.item_subtype].filter(Boolean).join(" · ") || "—")}</dd><dt>Compagnie</dt><dd>${item.cieid === 2 ? "Gamache (2)" : item.cieid === 3 ? "Gamex (3)" : esc(item.cieid)}</dd><dt>Créé</dt><dd class="d">${fmtDate(item.created_date)}</dd>${onh ? `<dt>En main</dt><dd class="num">${Number(onh.qty_onhand)} @ ${esc(onh.site_code||"")}${Number(onh.qty_alloc) ? " · alloué " + Number(onh.qty_alloc) : ""}</dd>` : ""}</dl>` : `<p class="muted">Inconnu de Prextra.</p>`}
+  ${x ? `<h3 style="margin-top:12px">Référentiel croisé</h3><dl class="dl"><dt>Cloud</dt><dd>${x.in_cloud ? "oui" : "non"} <span class="mono small muted">${esc(x.cloud_product_id||"")}</span></dd><dt>Prextra</dt><dd>${x.in_prextra ? "oui" : "non"} <span class="mono small muted">${esc(x.prextra_itemid||"")}</span></dd><dt>Sugar</dt><dd>${x.in_sugar ? "oui" : "non"}</dd><dt>Vérifié</dt><dd class="d">${fmtDT(x.last_verified_at)}</dd></dl>` : ""}</div>`;
+  h += `<div class="section"><h2>Achat <span class="src">po / receipt / ap_invoice</span></h2>`;
+  const po = dwh.po||[], rc = dwh.rcpt||[], ap = dwh.ap||[];
+  if (!po.length && !rc.length && !ap.length) h += `<p class="muted">Aucune ligne d'achat.</p>`;
+  else h += `<dl class="dl">${po.map(p => `<dt>PO ${esc(p.pono)}</dt><dd>${fmtDate(p.po_date)} · ${esc(p.vendor_name||"")} · reçu ${Number(p.qty_received)}/${Number(p.qty)}</dd>`).join("")}${rc.map(r => `<dt>Réception</dt><dd>${fmtDate(r.receive_date)} · ${esc(r.vendor_name||"")}${Number(r.freight_cost) ? " · transport " + money(Number(r.freight_cost)) : ""}</dd>`).join("")}${ap.map(a => `<dt>Facture fourn.</dt><dd>${fmtDate(a.inv_date)} · ${esc(a.vendor_name||"")} · <b>${money(Number(a.amount))}</b> <span class="mono small muted">${esc(a.vendor_invnbr||"")}</span></dd>`).join("")}</dl>`;
+  h += `</div></div>`;
+  // ventes
+  const so = dwh.so||[], inv = dwh.inv||[];
+  if (so.length || inv.length) {
+    h += `<div class="section"><h2>Vente <span class="src">sales_order / invoice</span></h2><div class="tw"><table><thead><tr><th>Type</th><th>No</th><th>Date</th><th>Client</th><th class="r">Montant</th><th>Statut</th></tr></thead><tbody>${so.map(s => `<tr><td>Commande</td><td class="mono">${esc(s.sonbr)}</td><td class="d">${fmtDate(s.order_date)}</td><td>${esc(s.customer_name||"")}</td><td class="r num">${money(Number(s.amount))}</td><td>${esc(s.so_status||"")}${s.date_shipped ? " · livré " + fmtDate(s.date_shipped) : ""}</td></tr>`).join("")}${inv.map(i => `<tr><td>Facture</td><td class="mono">${esc(i.invnbr)}</td><td class="d">${fmtDate(i.inv_date)}</td><td>${esc(i.customer_name||"")}</td><td class="r num">${money(Number(i.amount))}</td><td>${i.is_posted ? "comptabilisée" : "non comptabilisée"}${i.is_paid ? " · payée" : ""}${i.unit_cost ? " · coût " + money(Number(i.unit_cost)) : ""}</td></tr>`).join("")}</tbody></table></div></div>`;
+  }
+  const mv = (dwh.mov||[]).slice().sort((a,b) => String(b.tr_timestamp||b.tr_date).localeCompare(String(a.tr_timestamp||a.tr_date)));
+  if (mv.length) h += `<div class="section"><details class="fold" style="margin-top:0"><summary>Mouvements d'inventaire Prextra (${mv.length} lignes)</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Date</th><th>Type</th><th class="r">Qté</th><th class="r">Coût unitaire</th><th class="r">Coût moyen</th><th>Réf.</th><th>Programme</th></tr></thead><tbody>${mv.map(m => `<tr><td class="d">${fmtDate(m.tr_date)}</td><td>${esc(m.tr_type)}</td><td class="r num">${Number(m.qty_change)}</td><td class="r num">${money(Number(m.unit_cost))}</td><td class="r num">${money(Number(m.avg_cost))}</td><td class="mono small">${esc(m.wonbr || m.pono || m.sonbr || m.invnbr || "")}</td><td class="small muted">${esc(m.src_program||"")}</td></tr>`).join("")}</tbody></table></div></details></div>`;
+  return h;
+}
+/* ---- Coût cumulé : résumé par nature de coût + atelier ---- */
+const COST_GROUP = ct => /^cachat$/.test(ct) ? "achat" : /^achat$/.test(ct) ? "achat" : ct === "labor" ? "labor" : ct === "material" ? "material" : /^(st200|service|subcontr)$/.test(ct) ? "sc" : "autre";
+const COST_GROUP_LABEL = { achat: "Achat et frais d'achat", labor: "Main-d'oeuvre atelier", material: "Matériel et pièces", sc: "Sous-traitance", autre: "Transport et frais généraux" };
+function renderCostSummary(dwh, d, buy){
+  const jc = (dwh.jobcost || []).map(r => ({ ct: r.ct, libelle: r.libelle || r.ct, montant: Number(r.montant) || 0 })).filter(r => r.montant !== 0).sort((a,b) => b.montant - a.montant);
+  const wo = (dwh.woops || []).slice().sort((a,b) => String(a.order_date).localeCompare(String(b.order_date)));
+  const laborByWo = Object.fromEntries((dwh.labor || []).map(l => [String(l.wonbr), l]));
+  const total = jc.reduce((a,r) => a + r.montant, 0);
+  const grp = {}; for (const r of jc) grp[COST_GROUP(r.ct)] = (grp[COST_GROUP(r.ct)] || 0) + r.montant;
+  const atelier = (grp.labor || 0) + (grp.material || 0) + (grp.sc || 0);
+  const woHours = wo.reduce((a,w) => a + (Number(w.real_h) || 0), 0), woEst = wo.reduce((a,w) => a + (Number(w.est_h) || 0), 0), woLabor = wo.reduce((a,w) => a + (Number(w.labor) || 0), 0);
+  const kpi = (l, v, s, cls="") => `<div class="kpi ${cls}"><div class="l">${l}</div><div class="v ${String(v).length > 12 ? "small" : ""}">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+  const ref = d.costNow ?? total;
+  const marge = d.asking && ref ? d.asking - ref : null;
+  const ecart = d.costNow != null && total ? d.costNow - total : null;
+  let h = `<div class="section"><h2>Coût cumulé — résumé <span class="src">job-costing Prextra (itemscost) + bons de travail</span></h2>`;
+  if (!jc.length && !wo.length && !d.costSteps.length) return h + `<p class="muted">Aucun coût enregistré dans Prextra pour cette unité.</p></div>`;
+  h += `<div class="kpis" style="margin-top:0">
+    ${kpi("Achat", grp.achat ? money(grp.achat) : (buy != null ? money(buy) : "—"), grp.achat && buy != null && Math.abs(grp.achat - buy) > 1 ? "facture fournisseur " + money(buy) : "coût d'achat + frais d'achat")}
+    ${kpi("Atelier", atelier ? money(atelier) : "—", atelier ? [grp.labor && "main-d'oeuvre " + money(grp.labor), grp.material && "pièces " + money(grp.material), grp.sc && "sous-traitance " + money(grp.sc)].filter(Boolean).join(" · ") : (wo.length ? "bons de travail sans coût" : "aucun bon de travail"), d.asking && atelier > d.asking * 0.25 ? "warn" : "")}
+    ${kpi("Heures atelier", woHours ? woHours.toFixed(1).replace(".", ",") + " h" : "—", wo.length ? `${wo.length} BT${woEst ? " · estimé " + woEst.toFixed(1).replace(".", ",") + " h" : ""}` : "")}
+    ${kpi("Coût cumulé", ref != null ? money(ref) : "—", ecart != null && Math.abs(ecart) > 1 ? "coût moyen Prextra; job-costing " + money(total) + " (écart " + (ecart > 0 ? "+" : "") + money(ecart) + ")" : "coût moyen Prextra = job-costing", d.asking && ref > d.asking ? "crit" : "")}
+    ${kpi("Marge brute vs affiché", marge != null ? money(marge) : "—", marge != null && d.asking ? pctAbs(100 * marge / d.asking) + " du prix affiché " + money(d.asking) : (d.asking ? "" : "pas de prix affiché"), marge != null ? (marge < 0 ? "crit" : marge / d.asking < 0.1 ? "warn" : "good") : "")}
+  </div>`;
+  if (total) {
+    const order = ["achat","labor","material","sc","autre"];
+    h += `<div class="stack">${order.filter(g => grp[g] > 0).map(g => `<i class="${g}" title="${esc(COST_GROUP_LABEL[g])} : ${money(grp[g])}" style="width:${Math.max(0.5, 100 * grp[g] / total).toFixed(2)}%"></i>`).join("")}</div>
+    <div class="legend">${order.filter(g => grp[g] > 0).map(g => `<span class="${g}">${esc(COST_GROUP_LABEL[g])} <b>${money(grp[g])}</b> · ${pctAbs(100 * grp[g] / total)}</span>`).join("")}</div>`;
+  }
+  h += `<div class="grid2" style="margin-top:14px">`;
+  h += `<div class="section"><h2>Par nature de coût <span class="src">libellés Prextra</span></h2>` + (jc.length ? `<div class="tw"><table><thead><tr><th>Type</th><th class="r">Montant</th><th class="r">Part</th></tr></thead><tbody>${jc.map(r => `<tr><td>${esc(r.libelle)} <span class="mono small muted">${esc(r.ct)}</span></td><td class="r num">${money(r.montant)}</td><td class="r num">${pctAbs(100 * r.montant / total)}</td></tr>`).join("")}<tr class="total"><td>Total job-costing</td><td class="r num">${money(total)}</td><td class="r num">100 %</td></tr></tbody></table></div>` : `<p class="muted">Aucune ligne de job-costing (unité entrée avant le suivi, ou coûts non ventilés).</p>`) + `</div>`;
+  h += `<div class="section"><h2>Atelier par bon de travail <span class="src">stg.prextra_wo_operations</span></h2>` + (wo.length ? `<div class="tw"><table><thead><tr><th>BT</th><th>Statut</th><th>Période</th><th class="r">Est.</th><th class="r">Réel</th><th class="r">Main-d'oeuvre</th><th class="r">Sous-tr.</th><th>Postes touchés</th></tr></thead><tbody>${wo.map(w => { const lb = laborByWo[String(w.wonbr)]; const wc = (w.workcenters || "").split(", ").filter(Boolean); return `<tr><td class="mono">${esc(w.wonbr)}</td><td><span class="pill ${w.closed_date ? "good" : "warn"}">${esc(w.statut || "?")}</span></td><td class="d">${fmtDate(w.order_date)}${w.closed_date ? " → " + fmtDate(w.closed_date) : " → …"}</td><td class="r num">${Number(w.est_h) ? Number(w.est_h).toFixed(1).replace(".", ",") + " h" : "—"}</td><td class="r num ${Number(w.est_h) && Number(w.real_h) > Number(w.est_h) * 1.2 ? "warn" : ""}">${Number(w.real_h) ? Number(w.real_h).toFixed(1).replace(".", ",") + " h" : "—"}${lb?.mecanos ? ` <span class="small muted">${lb.mecanos} méc.</span>` : ""}</td><td class="r num">${Number(w.labor) ? money(Number(w.labor)) : "—"}</td><td class="r num">${Number(w.sc) ? money(Number(w.sc)) : "—"}</td><td class="small">${esc(wc.slice(0, 4).join(", "))}${wc.length > 4 ? ` <span class="muted">+${wc.length - 4}</span>` : ""}</td></tr>`; }).join("")}<tr class="total"><td colspan="3">Total atelier</td><td class="r num">${woEst ? woEst.toFixed(1).replace(".", ",") + " h" : "—"}</td><td class="r num">${woHours ? woHours.toFixed(1).replace(".", ",") + " h" : "—"}</td><td class="r num">${woLabor ? money(woLabor) : "—"}</td><td class="r num">${wo.reduce((a,w) => a + (Number(w.sc) || 0), 0) ? money(wo.reduce((a,w) => a + (Number(w.sc) || 0), 0)) : "—"}</td><td></td></tr></tbody></table></div><p class="note">Les heures et la main-d'oeuvre viennent des opérations des bons de travail; les pièces et la sous-traitance facturées sont dans le job-costing (colonne de gauche), pas par bon de travail.</p>` : `<p class="muted">Aucun bon de travail Prextra.</p>`) + `</div>`;
+  h += `</div>`;
+  if (d.costSteps.length) {
+    const max = Math.max(...d.costSteps.map(s => s.to), d.asking || 0) || 1;
+    h += `<details class="fold"><summary>Étapes du coût moyen Prextra (${d.costSteps.length} changements)</summary>
+    <div class="tw" style="margin-top:8px"><table><thead><tr><th>Date</th><th>Type</th><th class="r">Coût cumulé</th><th class="r">Δ</th><th style="width:40%">&nbsp;</th></tr></thead><tbody>${d.costSteps.map(s => `<tr><td class="d">${fmtDate(s.date)}</td><td>${esc(s.type)}${s.ref ? ` <span class="mono small muted">${esc(s.ref)}</span>` : ""}</td><td class="r num">${money(s.to)}</td><td class="r num ${s.from != null && s.to - s.from > 0 ? "" : "muted"}">${s.from == null ? "" : (s.to - s.from >= 0 ? "+" : "") + money(s.to - s.from)}</td><td><div style="height:8px;border-radius:2px;background:var(--surface2);position:relative"><div style="height:8px;border-radius:2px;background:${d.asking && s.to > d.asking ? "var(--crit)" : "var(--accent)"};width:${Math.round(100*s.to/max)}%"></div>${d.asking ? `<div title="Prix demandé ${money(d.asking)}" style="position:absolute;top:-3px;bottom:-3px;left:${Math.round(100*d.asking/max)}%;border-left:2px dashed var(--good)"></div>` : ""}</div></td></tr>`).join("")}</tbody></table></div>${d.asking ? `<p class="small muted" style="margin:8px 0 0">La ligne pointillée verte marque le prix demandé (${money(d.asking)}).</p>` : ""}</details>`;
+  }
+  return h + `</div>`;
+}
+function renderDocs(cloud, P){
+  if (!cloud) return `<div class="state">Cloud indisponible.</div>`;
+  let h = `<div class="grid2"><div class="section"><h2>Documents Docudex <span class="src">${cloud.files.total} fichiers</span></h2>`;
+  if (!cloud.files.byTag.length) h += `<p class="muted">Aucun document rattaché.</p>`;
+  else h += `<div class="tw"><table><thead><tr><th>Étiquette</th><th class="r">Fichiers</th><th>Dernier ajout</th></tr></thead><tbody>${cloud.files.byTag.map(t => `<tr><td>${esc(t._id)}</td><td class="r num">${t.n}</td><td class="d">${fmtDate(t.last)}</td></tr>`).join("")}</tbody></table></div>`;
+  h += `</div><div class="section"><h2>Notes <span class="src">${cloud.notes.length}</span></h2>`;
+  if (!cloud.notes.length) h += `<p class="muted">Aucune note.</p>`;
+  else h += cloud.notes.map(n => `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="small muted"><span class="mono">${fmtDate(n.date)}</span> · ${esc(n.user)} · ${esc(n.type||"")} ${n.importance === "important" ? '<span class="pill warn">importante</span>' : ""}</div><div style="white-space:pre-wrap">${esc(n.note)}</div></div>`).join("");
+  h += `</div></div>`;
+  if (P?.specs?.published?.length) h += `<div class="section"><h2>Publié actuellement</h2><p>${P.specs.published.map(p => `<span class="pill accent" style="margin:2px">${esc(p)}</span>`).join(" ")}</p></div>`;
+  return h;
+}
+function renderLogs(cloud){
+  if (!cloud) return `<div class="state">Cloud indisponible.</div>`;
+  const logs = cloud.logs.slice().reverse();
+  const events = [...new Set(logs.map(l => l.event))];
+  const users = [...new Set(logs.map(l => l.user))].sort();
+  const rows = logs.map((l, i) => {
+    let ch = "";
+    if (l.offer) ch = `<b>offre</b> ${esc(l.offer.vendeur||"")}${l.offer.stocks.length ? " · " + esc(l.offer.stocks.join(", ")) : ""}`;
+    else if (l.changes && typeof l.changes === "object") ch = Object.entries(l.changes).filter(([k]) => !NOISE.has(k)).map(([k,v]) => `<b>${esc(k)}</b>=${esc(Array.isArray(v) ? v.join("|") : (v === "" ? "∅" : v))}`).join("  ");
+    return `<tr data-e="${esc(l.event)}" data-u="${esc(l.user)}"><td class="d">${fmtDT(l.date)}</td><td>${esc(l.user)}</td><td class="mono small">${esc(l.event)}</td><td class="ch">${ch}</td></tr>`;
+  }).join("");
+  return `<div class="section"><h2>Journal Gamache Cloud <span class="src">logs · ${logs.length} entrées · le bruit (acheteur_c, c_enginemodel_c, age_status_c) est masqué</span></h2>
+    <div class="rawfilter"><input id="lf-q" placeholder="Filtrer (champ, valeur, utilisateur)…" aria-label="Filtrer les logs"><select id="lf-e" aria-label="Événement"><option value="">Tous les événements</option>${events.map(e => `<option>${esc(e)}</option>`).join("")}</select><select id="lf-u" aria-label="Utilisateur"><option value="">Tous les utilisateurs</option>${users.map(u => `<option>${esc(u)}</option>`).join("")}</select><span class="small muted" id="lf-n" style="align-self:center">${logs.length} lignes</span></div>
+    <div class="tw"><table id="lf-t"><thead><tr><th>Date</th><th>Utilisateur</th><th>Événement</th><th>Changements</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+function wire(d){
+  document.querySelectorAll(".tabs [role=tab]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".tabs [role=tab]").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.dataset.p === b.dataset.t));
+  }));
+  const tlf = $("#tlf"), tl = $("#tl");
+  const applyTl = () => { if (!tlf || !tl) return; const on = new Set([...tlf.querySelectorAll("input:checked")].map(i => i.value)); tl.querySelectorAll("li").forEach(li => { li.style.display = (li.dataset.k === "gap" || on.has(li.dataset.k)) ? "" : "none"; }); };
+  if (tlf) { tlf.addEventListener("change", applyTl); applyTl(); }
+  const q = $("#lf-q"), se = $("#lf-e"), su = $("#lf-u"), t = $("#lf-t"), n = $("#lf-n");
+  if (t) { const f = () => { const qq = (q.value||"").toLowerCase(), e = se.value, u = su.value; let c = 0; t.querySelectorAll("tbody tr").forEach(tr => { const ok = (!e || tr.dataset.e === e) && (!u || tr.dataset.u === u) && (!qq || tr.textContent.toLowerCase().includes(qq)); tr.style.display = ok ? "" : "none"; if (ok) c++; }); n.textContent = c + " lignes"; }; q.addEventListener("input", f); se.addEventListener("change", f); su.addEventListener("change", f); }
+  const ai = $("#ai-btn");
+  if (ai) ai.addEventListener("click", () => runAI(d));
+  const mo = $("#more-offers");
+  if (mo) mo.addEventListener("click", () => { const open = mo.getAttribute("aria-expanded") === "true"; document.querySelectorAll("tr.more-offer").forEach(tr => { tr.hidden = open; }); mo.setAttribute("aria-expanded", String(!open)); mo.textContent = (open ? "▾ Voir les " : "▴ Replier les ") + document.querySelectorAll("tr.more-offer").length + " offres plus anciennes"; });
+}
+
+/* ============ Négociation — vue globale ============ */
+async function loadNego(){
+  const btn = $("#nego-btn"); btn.disabled = true;
+  history.replaceState(null, "", "#negociation");
+  $("#main").innerHTML = `<div class="loading"><span class="spin"></span>Offres, prix affichés et factures des 12 derniers mois — Gamache DWH (Metabase)…</div>`;
+  const g = await fetchNego();
+  btn.disabled = false;
+  current = null;
+  if (!g) { $("#main").innerHTML = `<div class="state"><h2>Négociation indisponible</h2></div>${mcpErrorHtml(negoErr, "DWH")}`; return; }
+  $("#main").innerHTML = renderNego(g);
+  $("#main").addEventListener("click", e => { const b = e.target.closest("button.stocklink[data-s]"); if (b) { $("#q").value = b.dataset.s; load(b.dataset.s); } }, { once: false });
+}
+function renderNego(g){
+  const k = g.kpi || {};
+  const kpi = (l, v, s, cls="") => `<div class="kpi ${cls}"><div class="l">${l}</div><div class="v ${String(v).length > 12 ? "small" : ""}">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+  const num = x => x == null ? "—" : Number(x).toLocaleString("fr-CA");
+  const medInv = k.med_inv_over_offer ? ratioDelta(Number(k.med_inv_over_offer)) : null;
+  const maxM = Math.max(...g.month.map(m => Number(m.offers)), 1);
+  const rowsCat = g.cat.map(c => `<tr><td>${esc(c.category)}</td><td class="r num">${num(c.units)}</td><td class="r num">${num(c.offers)}</td><td class="r num">${num(c.sold)}</td><td class="r num">${pctAbs(Number(c.conv_pct))}</td><td class="r num">${c.med_days != null ? Math.round(Number(c.med_days)) + " j" : "—"}</td><td class="r">${c.med_offer_over_liste ? deltaPill(ratioDelta(Number(c.med_offer_over_liste)), true) : "—"}</td><td class="r">${c.med_inv_over_offer ? deltaPill(ratioDelta(Number(c.med_inv_over_offer)), true) : "—"}<span class="small muted"> (${c.n_ratio})</span></td></tr>`).join("");
+  const rowsV = g.vend.map(c => `<tr><td>${esc(c.vendeur)}</td><td class="r num">${num(c.units)}</td><td class="r num">${num(c.offers)}</td><td class="r num">${num(c.sold)}</td><td class="r num">${pctAbs(Number(c.conv_pct))}</td><td class="r num">${c.med_days != null ? Math.round(Number(c.med_days)) + " j" : "—"}</td><td class="r">${c.med_offer_over_liste ? deltaPill(ratioDelta(Number(c.med_offer_over_liste)), true) : "—"}</td><td class="r">${c.med_inv_over_offer ? deltaPill(ratioDelta(Number(c.med_inv_over_offer)), true) : "—"}<span class="small muted"> (${c.n_ratio})</span></td><td class="d">${fmtDate(c.last_offer)}</td></tr>`).join("");
+  const rowsU = g.unsold.map(u => { const dl = u.best_offer && u.prix_liste ? ratioDelta(Number(u.best_offer)/Number(u.prix_liste)) : null; const marge = u.best_offer && u.total_cost ? Number(u.best_offer) - Number(u.total_cost) : null; return `<tr><td><button type="button" class="stocklink" data-s="${esc(u.stock)}">${esc(u.stock)}</button></td><td class="small">${esc(u.category || "—")}</td><td class="small">${esc(statusLabel(u.status))}</td><td>${esc(u.vendeur || "—")}</td><td class="r num">${num(u.n_offers)}</td><td class="r num">${num(u.n_clients)}</td><td class="d">${fmtDate(u.first_offer)}</td><td class="d">${fmtDate(u.last_offer)}</td><td class="r num">${u.prix_liste ? money(Number(u.prix_liste)) : "—"}</td><td class="r num">${u.best_offer ? money(Number(u.best_offer)) : "—"}</td><td class="r">${dl != null ? deltaPill(dl, true) : "—"}</td><td class="r num">${marge != null ? money(marge) : "—"}</td><td class="r num ${Number(u.age_days) > 365 ? "warn" : ""}">${num(u.age_days)} j</td></tr>`; }).join("");
+  const thead = (extra="") => `<thead><tr><th>${extra}</th><th class="r">Unités</th><th class="r">Offres</th><th class="r">Facturées</th><th class="r">Conversion</th><th class="r">Délai médian</th><th class="r">Offre vs liste</th><th class="r">Facturé vs offre</th>${extra === "Vendeur" ? "<th>Dernière offre</th>" : ""}</tr></thead>`;
+  return `
+  <section class="ident">
+    <div class="stock"><small>Vue globale</small>Négociation</div>
+    <div class="desc"><h1>Offres proposées, prix affiché, prix facturé</h1>
+      <div class="sub"><span class="pill accent">12 derniers mois</span><span>Toutes les unités contenues dans au moins une offre Gamache Cloud, chacune à son propre prix (offres multi-unités éclatées)</span></div>
+      <div class="sub small muted" style="margin-top:6px"><span>Source : dwh.fact_cloud_event (offer) × dwh.dim_product × dwh.fact_invoice_line</span></div>
+    </div>
+    <div class="links"><span class="stale">DWH : ${negoStale ? "cache " + fmtDT(negoStale) : "réplique"} · clique un numéro de stock pour ouvrir sa fiche</span></div>
+  </section>
+  <div class="kpis">
+    ${kpi("Unités avec offres", num(k.units), num(k.offers) + " offres · " + num(k.vendeurs) + " vendeurs")}
+    ${kpi("Facturées après offre", num(k.sold), k.units ? pctAbs(100 * Number(k.sold) / Number(k.units)) + " de conversion" : "")}
+    ${kpi("1re offre → facture", k.med_days != null ? Math.round(Number(k.med_days)) + " j" : "—", "médiane, unités facturées")}
+    ${kpi("Facturé vs meilleure offre", medInv != null ? deltaPill(medInv, true) : "—", "médiane : ce qui se perd entre la proposition et la facture")}
+    ${kpi("Offres sans vente", num(k.stuck), "unités encore à vendre avec 3 offres ou plus", Number(k.stuck) > 0 ? "warn" : "")}
+  </div>
+  <div class="section" style="margin-top:14px"><h2>Offres par mois <span class="src">${g.month.length} mois · le mois courant est partiel · une offre multi-unités compte une fois par unité</span></h2>
+    <div class="mbars">${g.month.map(m => `<div title="${esc(m.m)} : ${num(m.offers)} offres sur ${num(m.units)} unités"><b>${num(m.offers)}</b><i style="height:${Math.max(2, Math.round(70 * Number(m.offers) / maxM))}px"></i><small>${esc(String(m.m).slice(2))}</small></div>`).join("")}</div>
+  </div>
+  <div class="section"><h2>Par catégorie</h2><div class="tw"><table>${thead("Catégorie")}<tbody>${rowsCat}</tbody></table></div>
+    <p class="note">« Offre vs liste » : de combien la proposition dépasse (ou non) le prix de vente affiché au moment de l'offre. « Facturé vs offre » : écart entre la facture Prextra et la meilleure offre, sur les unités facturées (nombre entre parenthèses). Catégories de 3 unités et plus.</p></div>
+  <div class="section"><h2>Par vendeur <span class="src">créateur de l'offre dans Cloud</span></h2><div class="tw"><table>${thead("Vendeur")}<tbody>${rowsV}</tbody></table></div>
+    <p class="note">Le vendeur est celui qui a créé l'offre dans Gamache Cloud (create_cloud_c), pas nécessairement celui de la facture finale. Vendeurs de 3 unités et plus.</p></div>
+  <div class="section"><h2>Offres sans vente <span class="src">${g.unsold.length} unités · 3 offres ou plus, encore à vendre</span></h2>
+    <div class="tw"><table><thead><tr><th>Stock</th><th>Catégorie</th><th>Statut Cloud</th><th>Vendeur</th><th class="r">Offres</th><th class="r">Clients</th><th>1re offre</th><th>Dernière</th><th class="r">Prix liste</th><th class="r">Meilleure offre</th><th class="r">Offre vs liste</th><th class="r">Offre − coût</th><th class="r">En stock</th></tr></thead><tbody>${rowsU}</tbody></table></div>
+    <p class="note">Beaucoup d'offres sans facture : le prix, la condition ou la description bloquent. « Offre − coût » utilise dim_product.total_cost (prix d'achat sans préparation, voir V1 Metabase) : c'est une marge brute avant travaux, pas un profit.</p></div>`;
+}
+$("#nego-btn").addEventListener("click", loadNego);
+
+/* ============ Claude (sample) ============ */
+async function runAI(d){
+  const btn = $("#ai-btn"), out = $("#ai-out");
+  if (!sample || !current) return;
+  btn.disabled = true; out.textContent = "Analyse en cours…";
+  const { cloud, dwh, stock } = current;
+  const P = cloud?.found ? cloud.product : null;
+  const compact = {
+    stock, statut: statusLabel(P?.status || dwh?.dimp?.[0]?.status), specs: P?.specs, entree: P?.dateEntered, prixDemande: d.asking, coutCumule: d.costNow, etapesCout: d.costSteps,
+    statuts: d.statusRows.map(s => ({ date: s.date, statut: statusLabel(s.status), par: s.by })),
+    offres: d.offers.map(o => ({ date: o.date, vendeur: o.offer.vendeur || o.user, client: o.offer.client, prix: o.offer.prix, multi: o.offer.stocks })),
+    negociation: d.nego ? { prixAffiche: d.nego.asking, meilleureOffre: d.nego.best, offreVsAffichePct: d.nego.offerVsAsking, prixFacture: d.nego.invoiced, factureVsOffrePct: d.nego.invVsOffer, joursPremiereOffreFacture: d.nego.daysToSale, clientsDistincts: d.nego.clients.size, repereCategorie12mois: d.nego.benchCat, repereVendeur12mois: d.nego.benchVend } : null,
+    estimesCloud: cloud?.evals, notes: cloud?.notes, bonsTravail: (dwh?.wo||[]).map(w => ({ bt: w.wonbr, statut: w.statut, ouvert: w.order_date, ferme: w.closed_date, descr: w.wodescr })),
+    achat: dwh?.ap, jobCosting: dwh?.jobcost, atelierParBT: dwh?.woops, ventes: { commandes: dwh?.so, factures: dwh?.inv }, alertes: d.alerts.map(a => a.t + " — " + a.p), documents: cloud?.files
+  };
+  try {
+    const r = await fetch("/api/analyse", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ stock, compact }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+    out.textContent = j.text || "";
+  } catch (e) {
+    out.innerHTML = `<span class="muted">Analyse impossible : ${esc(e?.message || "erreur")}</span>`;
+  } finally { btn.disabled = false; }
+}
+
+boot();
+})();
+</script>
+
